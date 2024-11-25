@@ -1,7 +1,9 @@
 import 'dart:core';
 import 'dart:io';
+import 'dart:ui';
 import 'dart:typed_data';
 import 'package:lunify/audio_file_handler.dart';
+import 'package:lunify/image_util.dart';
 import 'package:lunify/models/song_model.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:audio_metadata_extractor/audio_metadata_extractor.dart';
@@ -48,7 +50,12 @@ class _PlaylistTabState extends State<PlaylistTab> {
           return ListTile(
             title: Text(currentPlaylist.songs[index].songName),
             subtitle: Text(currentPlaylist.songs[index].songArtist),
-            leading: Image.memory(Uint8List.fromList(currentPlaylist.songs[index].coverPicture)),
+            leading:  ImageUtil.isValidImage(currentPlaylist.songs[index].coverPicture) ?  
+              Image.memory(Uint8List.fromList(currentPlaylist.songs[index].coverPicture)) : 
+              const Icon(
+                Icons.music_note_outlined,
+                size: 55,
+              ),
             onTap: () {
               Provider.of<AudioFileHandler>(context, listen: false).songClickedCallback(
                 SongModel(

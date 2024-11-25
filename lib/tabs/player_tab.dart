@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:lunify/audio_file_handler.dart';
+import 'package:lunify/image_util.dart';
 import 'package:lunify/models/song_model.dart';
 
 import 'package:flutter/material.dart';
@@ -23,7 +24,7 @@ class _PlayerTabState extends State<PlayerTab> {
 
   // The audio player object:
   final audioPlayer = AudioPlayer();
-  Image? coverPicture;
+  Widget? coverPicture;
 
   // Variables that handle the state of the  player
   bool _paused = true;
@@ -109,8 +110,19 @@ class _PlayerTabState extends State<PlayerTab> {
     }
 
     // This fixed the image flickering issues
-    coverPicture = _currentSongPlaying.coverPicture.isEmpty ? null : Image.memory(Uint8List.fromList(_currentSongPlaying.coverPicture));
-
+    coverPicture = ImageUtil.isValidImage(_currentSongPlaying.coverPicture) ?  
+              Image.memory(Uint8List.fromList(_currentSongPlaying.coverPicture)) : 
+              const Padding(
+                padding: EdgeInsets.only(
+                  top: 27,
+                  bottom: 27
+                ),
+                child: Icon(
+                  Icons.music_note_outlined,
+                  size: 300,
+                ),
+              );
+              
     audioPlayer.positionStream.listen((position) {
       if(mounted) {
         setState(() {
@@ -137,7 +149,12 @@ class _PlayerTabState extends State<PlayerTab> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.only(
+              top: 40, 
+              bottom: 40,
+              left: 20,
+              right: 20
+            ),
             child: coverPicture ?? const Placeholder(),
           ),
 
