@@ -52,6 +52,7 @@ dev_dependencies:
   just_audio: ^0.9.42
   provider: ^6.1.2
   image: ^4.3.0
+  filesystem_picker: ^4.1.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

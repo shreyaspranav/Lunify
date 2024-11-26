@@ -35,6 +35,8 @@ class AudioFileHandler extends ChangeNotifier {
 
   late Function(SongModel) _onSongClicked;
 
+  bool _audioMetadataLoaded = false; 
+
   // These are used to switch to the player tab when a song is clicked.
   late TabController _currentTabs;
   late int _playerTabIndex;
@@ -62,50 +64,69 @@ class AudioFileHandler extends ChangeNotifier {
 
   void setCurrentSongPlaying(SongModel model)   { currentSongPlaying = model; notifyListeners(); }
 
-  Future<bool> loadAudioMetadataFromDisk(void Function(double)onProgressCallback) async {
+  Future<bool> loadAudioMetadataFromDisk(void Function(double)onProgressCallback, [bool forceReload = false]) async {
     var status = await Permission.storage.status;
     if (status.isDenied) {
       return false;
     } else {
-      print("Storage Permission Accepted!");
+      if(forceReload || !_audioMetadataLoaded) {
 
-      int totalFiles = 0;
-      int fileCount = 0;
+        print("Storage Permission Accepted!");
 
-      List<List<FileSystemEntity>> fileEachAudioUrl = [];
+        int totalFiles = 0;
+        int fileCount = 0;
 
-      for(String url in audioLibraryUrls) {
-        Directory urlDirectory = Directory(url);
-        List<FileSystemEntity> files = urlDirectory.listSync(recursive: true);
+        List<List<FileSystemEntity>> fileEachAudioUrl = [];
 
-        fileEachAudioUrl.add(files);
-        totalFiles += files.length;
-      }
+        for(String url in audioLibraryUrls) {
+          Directory urlDirectory = Directory(url);
+          List<FileSystemEntity> files = urlDirectory.listSync(recursive: true);
 
-      for(List<FileSystemEntity> files in fileEachAudioUrl) {
-        for(var file in files) {
-          if(file is File && (file.path.endsWith('mp3') || file.path.endsWith('flac'))) {
-            var songMetadata = await AudioMetadata.extract(file);
-            if(songMetadata != null) {
-              library.songs.add(
-                SongModel(
-                  songUrl: file.path,
-                  songName: songMetadata.trackName ?? "Unknown name", 
-                  songArtist: songMetadata.firstArtists  ?? "Unknown artist", 
-                  coverPicture: songMetadata.coverData ?? []
-                )
-              );
+          fileEachAudioUrl.add(files);
+          totalFiles += files.length;
+        }
+
+        for(List<FileSystemEntity> files in fileEachAudioUrl) {
+          for(var file in files) {
+            if(file is File && (file.path.endsWith('mp3') || file.path.endsWith('flac'))) {
+              var songMetadata = await AudioMetadata.extract(file);
+              if(songMetadata != null) {
+                library.songs.add(
+                  SongModel(
+                    songUrl: file.path,
+                    songName: songMetadata.trackName ?? "Unknown name", 
+                    songArtist: songMetadata.firstArtists  ?? "Unknown artist", 
+                    coverPicture: songMetadata.coverData ?? []
+                  )
+                );
+              }
             }
             fileCount++;
             onProgressCallback(fileCount / totalFiles);
           }
         }
-      }
 
-      // TEMP
-      currentPlaylist = library;
-      return true;
+        _audioMetadataLoaded = true;
+        
+        // TEMP
+        currentPlaylist = library;
+        return true;
+      } else {
+        return false;
+      }
     }
+  }
+
+  void addAudioLibraryUrl(String url) {
+    audioLibraryUrls.add(url);
+  }
+
+  bool isMetadataLoaded() { 
+    return _audioMetadataLoaded; 
+  }
+
+  void setLoadMetadataFlag() { 
+    _audioMetadataLoaded = false; 
   }
 
   void setTabController(TabController controller) {

@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:lunify/audio_file_handler.dart';
+import 'package:lunify/pages/settings_page.dart';
 import 'package:lunify/tabs/home_tab.dart';
 import 'package:lunify/tabs/player_tab.dart';
 import 'package:lunify/tabs/playlist_tab.dart';
 
-import 'package:lunify/models/song_model.dart';
+import 'package:lunify/theme_provider.dart';
 import 'package:provider/provider.dart';
 
 void main() {
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => 
-      AudioFileHandler(
-        // Additional audio file lookup directories:
-        []
-      ),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => AudioFileHandler([])),
+        ChangeNotifierProvider(create: (context) => ThemeProvider())
+      ],
       child: const MyApp()
     )
   );
@@ -61,6 +61,8 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
 
   late TabController _tabController;
+  bool _isAudioMetadataLoading = true;
+  double _audioMetadataLoadingProgress = 0.0;
 
   @override
   void initState() {
@@ -70,11 +72,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
       length: MyApp.tabs.length, 
       initialIndex: 2,
       vsync: this
-    );    
-
-    Provider.of<AudioFileHandler>(context, listen: false).loadAudioMetadataFromDisk((progress) {
-      print("Progress of loading songs: ${progress * 100}");
-    });
+    );
 
     Provider.of<AudioFileHandler>(context, listen: false).setTabController(_tabController);
     Provider.of<AudioFileHandler>(context, listen: false).setPlayerTabIndex(1);
@@ -84,15 +82,11 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: getRootPage(),
-      theme: ThemeData(
-        brightness: Brightness.light,
-        // fontFamily: 'DMSerif', 
-      ),
-      darkTheme: ThemeData(
-        brightness: Brightness.dark,
-        // fontFamily: 'DMSerif', 
-      ),
-      themeMode: ThemeMode.light,
+
+      theme: lightTheme,
+      darkTheme: darkTheme,
+
+      themeMode: Provider.of<ThemeProvider>(context, listen: true).currentTheme,
       debugShowCheckedModeBanner: false,
     );
   }
@@ -109,11 +103,24 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
         ),
         centerTitle: false,
         actions: [
-          IconButton(
-            onPressed: () {
-
-            }, 
-            icon: const Icon(Icons.more_vert)
+          PopupMenuButton(
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                child: const Row(
+                  children: [
+                    Icon(Icons.settings),
+                    SizedBox(width: 10),
+                    Text("Settings")
+                  ]
+                ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const SettingsPage())
+                  );
+                },
+              )
+            ]
           )
         ],
       ),

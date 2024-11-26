@@ -21,6 +21,9 @@ class PlaylistTab extends StatefulWidget {
 class _PlaylistTabState extends State<PlaylistTab> {
   
   AudioFileHandler? _audioFileHandler;
+
+  bool _isAudioMetadataLoading = true;
+  double _audioMetadataLoadingProgress = 0.0;
   
   @override
   void initState() {
@@ -28,6 +31,10 @@ class _PlaylistTabState extends State<PlaylistTab> {
     // _requstPermissionAndScanSongs();
 
     _audioFileHandler = Provider.of<AudioFileHandler>(context, listen: false);
+
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      _loadAudioMetadata();
+    });
   }
 
   @override
@@ -37,37 +44,67 @@ class _PlaylistTabState extends State<PlaylistTab> {
 
     return Scaffold(
       body: 
-      // _audioFileHandler. ? 
-      //   Padding(
-      //     padding: const EdgeInsets.all(20),
-      //     child: Center(
-      //       child: LinearProgressIndicator(value: _scanningProgress)
-      //     ),
-      //   ) :  
-      ListView.builder(
-        itemCount: currentPlaylist.songs.length,
-        itemBuilder: (context, index) {
-          return ListTile(
-            title: Text(currentPlaylist.songs[index].songName),
-            subtitle: Text(currentPlaylist.songs[index].songArtist),
-            leading:  ImageUtil.isValidImage(currentPlaylist.songs[index].coverPicture) ?  
-              Image.memory(Uint8List.fromList(currentPlaylist.songs[index].coverPicture)) : 
-              const Icon(
-                Icons.music_note_outlined,
-                size: 55,
-              ),
-            onTap: () {
-              Provider.of<AudioFileHandler>(context, listen: false).songClickedCallback(
-                SongModel(
-                  songUrl:       currentPlaylist.songs[index].songUrl, 
-                  songName:      currentPlaylist.songs[index].songName, 
-                  songArtist:    currentPlaylist.songs[index].songArtist, 
-                  coverPicture:  currentPlaylist.songs[index].coverPicture
-              ));
-            },
-          );
-        }
-      )
+      _audioFileHandler!.isMetadataLoaded() ? 
+        ListView.builder(
+          itemCount: currentPlaylist.songs.length,
+          itemBuilder: (context, index) {
+            return ListTile(
+              title: Text(currentPlaylist.songs[index].songName),
+              subtitle: Text(currentPlaylist.songs[index].songArtist),
+              leading:  ImageUtil.isValidImage(currentPlaylist.songs[index].coverPicture) ?  
+                Image.memory(Uint8List.fromList(currentPlaylist.songs[index].coverPicture)) : 
+                const Icon(
+                  Icons.music_note_outlined,
+                  size: 55,
+                ),
+              onTap: () {
+                Provider.of<AudioFileHandler>(context, listen: false).songClickedCallback(
+                  SongModel(
+                    songUrl:       currentPlaylist.songs[index].songUrl, 
+                    songName:      currentPlaylist.songs[index].songName, 
+                    songArtist:    currentPlaylist.songs[index].songArtist, 
+                    coverPicture:  currentPlaylist.songs[index].coverPicture
+                ));
+              },
+            );
+          }
+        ) : 
+        Padding(
+          padding: const EdgeInsets.all(20),
+          child: Center(
+            child: Column(
+              children: [
+                Text("Loading Audio Metadata..."),
+                SizedBox(height: 10),
+                LinearProgressIndicator(
+                  value: _audioMetadataLoadingProgress,
+                  minHeight: 12,
+                  borderRadius: BorderRadius.all(Radius.circular(12.0)),
+                ),
+                SizedBox(width: 10),
+              ],
+            )
+          )
+        )
     );
+  }
+
+  void _loadAudioMetadata() {
+    setState(() {
+      _isAudioMetadataLoading = true;
+    });
+
+    Provider.of<AudioFileHandler>(context, listen: false).loadAudioMetadataFromDisk((progress) {
+      if(mounted) {
+        setState(() {
+          _audioMetadataLoadingProgress = progress;
+          print(progress);
+          if(_audioMetadataLoadingProgress == 1.0) {
+              _isAudioMetadataLoading = false;
+              print("False Set.");
+          }
+        });  
+      }
+    });
   }
 }
