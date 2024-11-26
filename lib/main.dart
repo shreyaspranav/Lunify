@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lunify/audio_file_handler.dart';
+import 'package:lunify/audio_service_provider.dart';
 import 'package:lunify/pages/settings_page.dart';
 import 'package:lunify/tabs/home_tab.dart';
 import 'package:lunify/tabs/player_tab.dart';
@@ -12,7 +12,7 @@ void main() {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (context) => AudioFileHandler([])),
+        ChangeNotifierProvider(create: (context) => AudioServiceProvider([])),
         ChangeNotifierProvider(create: (context) => ThemeProvider())
       ],
       child: const MyApp()
@@ -74,8 +74,8 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
       vsync: this
     );
 
-    Provider.of<AudioFileHandler>(context, listen: false).setTabController(_tabController);
-    Provider.of<AudioFileHandler>(context, listen: false).setPlayerTabIndex(1);
+    Provider.of<AudioServiceProvider>(context, listen: false).setTabController(_tabController);
+    Provider.of<AudioServiceProvider>(context, listen: false).setPlayerTabIndex(1);
   }
 
   @override
@@ -96,10 +96,6 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
     appBar: AppBar(
       title: const Text(
           "Lunify",
-          style: TextStyle(
-            color: Color.fromARGB(128, 140, 0, 255),
-            fontSize: 25.0
-          ),
         ),
         centerTitle: false,
         actions: [
@@ -124,8 +120,49 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
           )
         ],
       ),
-      drawer: const Drawer(
-        child: Text("This is a drawer"),
+      drawer: Drawer(
+        child: Padding(
+          padding: EdgeInsets.only(
+            top: 30,
+            left: 10
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Image.asset("assets/icon/icon.png"),
+              const SizedBox(height: 30),
+              Center(
+                child: Text(
+                  "Lunify",
+                  style: TextStyle(
+                    fontSize: 30
+                  ),
+                ),
+              ),
+              Center(
+                child: Text(
+                  "Version 0.0.1b",
+                ),
+              ),
+              SizedBox(height: 50),
+              Builder(
+                builder: (context) {
+                  return ListTile(
+                    leading: Icon(Icons.settings),
+                    title: Text("Settings"),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const SettingsPage())
+                      );
+                    },
+                  );
+                }
+              ),
+              
+            ]
+          ),
+        ),
       ),
       body: TabBarView(
         controller: _tabController,

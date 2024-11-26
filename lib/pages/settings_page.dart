@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:lunify/audio_file_handler.dart';
+import 'package:lunify/audio_service_provider.dart';
 import 'package:lunify/theme_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -53,7 +53,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 );
 
                 if(path != null) {
-                  Provider.of<AudioFileHandler>(context, listen: false).addAudioLibraryUrl(path);
+                  Provider.of<AudioServiceProvider>(context, listen: false).addAudioLibraryUrl(path);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text("Path $path is added to the music library.")),
                     snackBarAnimationStyle: AnimationStyle(
@@ -63,7 +63,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   );
                 }
 
-                Provider.of<AudioFileHandler>(context, listen: false).setLoadMetadataFlag();
+                Provider.of<AudioServiceProvider>(context, listen: false).setLoadMetadataFlag();
               }, 
               child: const Text("Add...")
             )

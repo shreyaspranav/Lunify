@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:lunify/audio_file_handler.dart';
+import 'package:lunify/audio_service_provider.dart';
 import 'package:lunify/image_util.dart';
 import 'package:lunify/models/song_model.dart';
 
@@ -22,19 +22,22 @@ enum RepeatState { off, playlist, current }
 
 class _PlayerTabState extends State<PlayerTab> {
 
-  // The audio player object:
-  final audioPlayer = AudioPlayer();
   Widget? coverPicture;
 
-  // Variables that handle the state of the  player
+  bool _favorite = false;
+
+  // Variables that handle the state of the player
   bool _paused = true;
   bool _isShuffleOn = false;
   RepeatState _repeatState = RepeatState.off;
 
   // TEMP: Song seconds calculation:
   late SongModel _currentSongPlaying;
-  Duration _songDuration = Duration.zero;
-  Duration _songProgess = Duration.zero;
+  late Duration _songDuration;
+  late Duration _songProgess;
+
+  double _playbackSpeed = 1.0;
+  double _playbackPitch = 1.0;
 
   String _convertDurationToString(Duration d) {
     // For now only deal with seconds, minutes and hours.
@@ -52,9 +55,9 @@ class _PlayerTabState extends State<PlayerTab> {
     setState(() {
       _paused = !_paused;
       if(_paused) {
-        audioPlayer.pause();
+        Provider.of<AudioServiceProvider>(context, listen: false).getAudioPlayer().pause();
       } else {
-        audioPlayer.play();
+        Provider.of<AudioServiceProvider>(context, listen: false).getAudioPlayer().play();
       } 
     });
   }
@@ -84,46 +87,32 @@ class _PlayerTabState extends State<PlayerTab> {
   void initState() {
     super.initState();
 
-    Provider.of<AudioFileHandler>(context, listen: false).setAudioPlayer(audioPlayer);
+    // Doing this because the state of the player needs to be restored based upon the "audio player" object.
+    _songProgess = Provider.of<AudioServiceProvider>(context, listen: false).getAudioPlayer().position;
+    _songDuration = Provider.of<AudioServiceProvider>(context, listen: false).getAudioPlayer().duration ?? Durations.extralong4;
+    _paused = !Provider.of<AudioServiceProvider>(context, listen: false).getAudioPlayer().playerState.playing;
 
-    Provider.of<AudioFileHandler>(context, listen: false).setSongClickedCallback((currentSong) {
-      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-        print("Mounted: $mounted");
-        if(mounted) {
-          setState(() {
-            // if(Directory(currentSong.songUrl).exists()) 
-            {
-              audioPlayer.stop();
-              audioPlayer.setUrl(currentSong.songUrl);
-              _paused = false;
-              _songProgess = Duration(seconds: 0);
-              audioPlayer.play();
-            }
-          });
-        }
-      });
-    });
-
-    _currentSongPlaying = Provider.of<AudioFileHandler>(context, listen: false).getCurrentSongPlaying();
-    if(!_currentSongPlaying.songUrl.isEmpty) {
-      audioPlayer.setUrl(_currentSongPlaying.songUrl);
-    }
+    _currentSongPlaying = Provider.of<AudioServiceProvider>(context, listen: false).getCurrentSongPlaying();
+    _playbackSpeed = Provider.of<AudioServiceProvider>(context, listen: false).getAudioPlayer().speed;
+    
+    // For now, let playback speed and pitch be the same(this offers best audio quality)
+    // There is only one slider thats sets both the speed and pitch 
+    _playbackPitch = _playbackSpeed;
 
     // This fixed the image flickering issues
-    coverPicture = ImageUtil.isValidImage(_currentSongPlaying.coverPicture) ?  
-              Image.memory(Uint8List.fromList(_currentSongPlaying.coverPicture)) : 
-              const Padding(
-                padding: EdgeInsets.only(
-                  top: 27,
-                  bottom: 27
-                ),
-                child: Icon(
-                  Icons.music_note_outlined,
-                  size: 300,
-                ),
-              );
+    coverPicture = _currentSongPlaying.coverPicture ?? 
+      const Padding(
+        padding: EdgeInsets.only(
+          top: 20,
+          bottom: 20
+        ),
+        child: Icon(
+          Icons.music_note_outlined,
+          size: 300,
+        ),
+      );
               
-    audioPlayer.positionStream.listen((position) {
+    Provider.of<AudioServiceProvider>(context, listen: false).getAudioPlayer().positionStream.listen((position) {
       if(mounted) {
         setState(() {
           _songProgess = position;
@@ -131,7 +120,7 @@ class _PlayerTabState extends State<PlayerTab> {
       }
     });
 
-    audioPlayer.durationStream.listen((duration) {
+    Provider.of<AudioServiceProvider>(context, listen: false).getAudioPlayer().durationStream.listen((duration) {
       if(mounted) {
         setState(() {
           _songDuration = duration!;
@@ -150,20 +139,88 @@ class _PlayerTabState extends State<PlayerTab> {
         children: [
           Padding(
             padding: const EdgeInsets.only(
-              top: 40, 
-              bottom: 40,
+              top: 30, 
+              bottom: 30,
               left: 20,
               right: 20
             ),
             child: coverPicture ?? const Placeholder(),
           ),
 
+          Padding(
+            padding: EdgeInsets.only(
+              left: 10,
+              right: 10
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                TextButton(
+                  onPressed: () {
+                    showModalBottomSheet(
+                      context: context, 
+                      builder: (context) {
+                        return StatefulBuilder(
+                          builder: (context, setter) {
+                            return FractionallySizedBox(
+                              widthFactor: 1.0,
+                              heightFactor: 0.3,
+                              child: Column(
+                                children: [
+                                  SizedBox(height: 30),
+                                  Text("Set Playback Speed/Pitch"),
+                                  SizedBox(height: 40),
+                                  Slider(
+                                    min: 0.6,
+                                    max: 1.4,
+                                    divisions: 20,
+                                    value: _playbackSpeed, 
+                                    onChanged: (v) {
+                                      setter(() {
+                                        _playbackSpeed = v;
+                                        _playbackPitch = v;
+                                        Provider.of<AudioServiceProvider>(context, listen: false).setPlaybackSpeed(v);
+                                        Provider.of<AudioServiceProvider>(context, listen: false).setPlaybackPitch(v);
+                                      });
+                                    }
+                                  )
+                                ],
+                              )
+                          );
+                          },
+                          
+                        );
+                      });
+                  }, 
+                  child: Text("S/P:${_playbackPitch.toStringAsFixed(2)}")
+                ),
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _favorite = !_favorite;
+                    });
+                  }, 
+                  child: Icon(_favorite ? Icons.favorite : Icons.favorite_border)
+                ),
+              ],
+            ),
+          ),
+
           // Name of the song
-          Text(
-            _currentSongPlaying.songName.isEmpty ?
-            "Unknown Title" : _currentSongPlaying.songName,
-            style: const TextStyle(
-              fontSize: 24.0
+          Padding(
+            padding: const EdgeInsets.only(
+              left: 10,
+              right: 10
+            ),
+            child: Center(
+              child: 
+                Text(
+                  _currentSongPlaying.songName.isEmpty ?
+                  "Unknown Title" : _currentSongPlaying.songName,
+                  style: const TextStyle(
+                    fontSize: 24.0
+                  ),
+                ),
             ),
           ),
 
@@ -179,7 +236,7 @@ class _PlayerTabState extends State<PlayerTab> {
             padding: const EdgeInsets.only(
               left: 20,
               right: 20,
-              top: 50
+              top: 20
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -198,7 +255,7 @@ class _PlayerTabState extends State<PlayerTab> {
             onChanged: (val) {
               setState(() {
                 _songProgess = Duration(seconds: val.toInt());
-                audioPlayer.seek(_songProgess);
+                Provider.of<AudioServiceProvider>(context, listen: false).getAudioPlayer().seek(_songProgess);
               });
             }
           ),

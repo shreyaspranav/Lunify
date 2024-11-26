@@ -1,6 +1,8 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:lunify/image_util.dart';
 import 'package:lunify/models/song_model.dart';
 import 'package:audio_metadata_extractor/audio_metadata_extractor.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -22,16 +24,20 @@ class AudioPlaylist {
 //    - There is a playlist called the "current playlist", from where the music should be played.
 //    - During the initial stages, the entire library would be read and added to the current playlist
 //  - Play/Pause/Next/Prev/Shuffle/Loop playlists
-class AudioFileHandler extends ChangeNotifier {
+class AudioServiceProvider extends ChangeNotifier {
   // List that contatins the URLs of the folders where the audio files are located.
   // Maybe not cross platform friendly?
   List<String> audioLibraryUrls = <String>["/storage/emulated/0/test_lunify"];
+
+  // This audio player object is owned by this class
+  final _audioPlayer = AudioPlayer();
   
   // List of playlists
   List<AudioPlaylist> playlists = [];
 
   AudioPlaylist currentPlaylist = AudioPlaylist(playlistName: "Current Playlist");
   AudioPlaylist library = AudioPlaylist(playlistName: "Library");  // Contains all the audio files that the device has to offer.
+
 
   late Function(SongModel) _onSongClicked;
 
@@ -40,17 +46,15 @@ class AudioFileHandler extends ChangeNotifier {
   // These are used to switch to the player tab when a song is clicked.
   late TabController _currentTabs;
   late int _playerTabIndex;
-
-  late AudioPlayer _audioPlayer;
   
   // The current song playing: initially it contains empty values.
   SongModel currentSongPlaying = SongModel(
     songUrl: "", 
     songName: "", 
     songArtist: "", 
-    coverPicture: []);
+    coverPicture: null);
 
-  AudioFileHandler(List<String> additionalAudioLibraryUrls) {
+  AudioServiceProvider(List<String> additionalAudioLibraryUrls) {
     // Add the additional URLs
     for (String url in additionalAudioLibraryUrls) {
       audioLibraryUrls.add(url);
@@ -91,12 +95,16 @@ class AudioFileHandler extends ChangeNotifier {
             if(file is File && (file.path.endsWith('mp3') || file.path.endsWith('flac'))) {
               var songMetadata = await AudioMetadata.extract(file);
               if(songMetadata != null) {
+                Image? imageToAdd = null;
+                if(ImageUtil.isValidImage(songMetadata.coverData ?? [])) {
+                  imageToAdd = Image.memory(Uint8List.fromList(songMetadata.coverData ?? []));
+                }
                 library.songs.add(
                   SongModel(
                     songUrl: file.path,
                     songName: songMetadata.trackName ?? "Unknown name", 
                     songArtist: songMetadata.firstArtists  ?? "Unknown artist", 
-                    coverPicture: songMetadata.coverData ?? []
+                    coverPicture: imageToAdd
                   )
                 );
               }
@@ -137,8 +145,16 @@ class AudioFileHandler extends ChangeNotifier {
     _playerTabIndex = index;
   }
 
-  void setAudioPlayer(AudioPlayer player) {
-    _audioPlayer = player;
+  AudioPlayer getAudioPlayer() {
+    return _audioPlayer;
+  }
+
+  void setPlaybackSpeed(double speedFactor) {
+    _audioPlayer.setSpeed(speedFactor);
+  }
+
+  void setPlaybackPitch(double pitchFactor) {
+    _audioPlayer.setPitch(pitchFactor);
   }
 
   void setSongClickedCallback(void Function(SongModel)onSongClicked) {
@@ -148,7 +164,9 @@ class AudioFileHandler extends ChangeNotifier {
   void songClickedCallback(SongModel model) {
     _currentTabs.animateTo(_playerTabIndex);
     _audioPlayer.stop();
-    _onSongClicked(model);
+    // _onSongClicked(model);
     currentSongPlaying = model;
+    _audioPlayer.setUrl(model.songUrl);
+    _audioPlayer.play();
   }
 }

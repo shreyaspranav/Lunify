@@ -2,7 +2,7 @@ import 'dart:core';
 import 'dart:io';
 import 'dart:ui';
 import 'dart:typed_data';
-import 'package:lunify/audio_file_handler.dart';
+import 'package:lunify/audio_service_provider.dart';
 import 'package:lunify/image_util.dart';
 import 'package:lunify/models/song_model.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -20,7 +20,7 @@ class PlaylistTab extends StatefulWidget {
 
 class _PlaylistTabState extends State<PlaylistTab> {
   
-  AudioFileHandler? _audioFileHandler;
+  AudioServiceProvider? _audioServiceProvider;
 
   bool _isAudioMetadataLoading = true;
   double _audioMetadataLoadingProgress = 0.0;
@@ -30,7 +30,7 @@ class _PlaylistTabState extends State<PlaylistTab> {
     super.initState();
     // _requstPermissionAndScanSongs();
 
-    _audioFileHandler = Provider.of<AudioFileHandler>(context, listen: false);
+    _audioServiceProvider = Provider.of<AudioServiceProvider>(context, listen: false);
 
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       _loadAudioMetadata();
@@ -40,25 +40,24 @@ class _PlaylistTabState extends State<PlaylistTab> {
   @override
   Widget build(BuildContext context) {
 
-    AudioPlaylist currentPlaylist = _audioFileHandler!.getCurrentPlaylist();
+    AudioPlaylist currentPlaylist = _audioServiceProvider!.getCurrentPlaylist();
 
     return Scaffold(
       body: 
-      _audioFileHandler!.isMetadataLoaded() ? 
+      _audioServiceProvider!.isMetadataLoaded() ? 
         ListView.builder(
           itemCount: currentPlaylist.songs.length,
           itemBuilder: (context, index) {
             return ListTile(
               title: Text(currentPlaylist.songs[index].songName),
               subtitle: Text(currentPlaylist.songs[index].songArtist),
-              leading:  ImageUtil.isValidImage(currentPlaylist.songs[index].coverPicture) ?  
-                Image.memory(Uint8List.fromList(currentPlaylist.songs[index].coverPicture)) : 
+              leading:  currentPlaylist.songs[index].coverPicture ?? 
                 const Icon(
                   Icons.music_note_outlined,
                   size: 55,
                 ),
               onTap: () {
-                Provider.of<AudioFileHandler>(context, listen: false).songClickedCallback(
+                Provider.of<AudioServiceProvider>(context, listen: false).songClickedCallback(
                   SongModel(
                     songUrl:       currentPlaylist.songs[index].songUrl, 
                     songName:      currentPlaylist.songs[index].songName, 
@@ -94,7 +93,7 @@ class _PlaylistTabState extends State<PlaylistTab> {
       _isAudioMetadataLoading = true;
     });
 
-    Provider.of<AudioFileHandler>(context, listen: false).loadAudioMetadataFromDisk((progress) {
+    Provider.of<AudioServiceProvider>(context, listen: false).loadAudioMetadataFromDisk((progress) {
       if(mounted) {
         setState(() {
           _audioMetadataLoadingProgress = progress;
