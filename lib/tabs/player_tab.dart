@@ -99,6 +99,7 @@ class _PlayerTabState extends State<PlayerTab> {
     // There is only one slider thats sets both the speed and pitch 
     _playbackPitch = _playbackSpeed;
 
+    // Set it cover everything:
     // This fixed the image flickering issues
     coverPicture = _currentSongPlaying.coverPicture ?? 
       const Padding(
@@ -139,12 +140,12 @@ class _PlayerTabState extends State<PlayerTab> {
         children: [
           Padding(
             padding: const EdgeInsets.only(
-              top: 30, 
-              bottom: 30,
+              top: 20, 
+              bottom: 20,
               left: 20,
               right: 20
             ),
-            child: coverPicture ?? const Placeholder(),
+            child: coverPicture ?? const Placeholder()
           ),
 
           Padding(
@@ -217,13 +218,14 @@ class _PlayerTabState extends State<PlayerTab> {
                   }, 
                   child: Text("S/P:${_playbackPitch.toStringAsFixed(2)}")
                 ),
-                TextButton(
+                Spacer(),
+                IconButton(
                   onPressed: () {
                     setState(() {
                       _favorite = !_favorite;
                     });
                   }, 
-                  child: Icon(_favorite ? Icons.favorite : Icons.favorite_border)
+                  icon: Icon(_favorite ? Icons.favorite : Icons.favorite_border)
                 ),
               ],
             ),
@@ -232,6 +234,7 @@ class _PlayerTabState extends State<PlayerTab> {
           // Name of the song
           Padding(
             padding: const EdgeInsets.only(
+              top: 15,
               left: 10,
               right: 10
             ),
@@ -240,8 +243,9 @@ class _PlayerTabState extends State<PlayerTab> {
                 Text(
                   _currentSongPlaying.songName.isEmpty ?
                   "Unknown Title" : _currentSongPlaying.songName,
+                  textAlign: TextAlign.center,
                   style: const TextStyle(
-                    fontSize: 24.0
+                    fontSize: 24.0,
                   ),
                 ),
             ),
@@ -283,8 +287,8 @@ class _PlayerTabState extends State<PlayerTab> {
             }
           ),
 
-          SizedBox(
-            height: 50,
+          const SizedBox(
+            height: 35,
           ),
           Padding(
             padding: const EdgeInsets.only(
