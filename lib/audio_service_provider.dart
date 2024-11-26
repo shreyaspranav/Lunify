@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -27,7 +28,7 @@ class AudioPlaylist {
 class AudioServiceProvider extends ChangeNotifier {
   // List that contatins the URLs of the folders where the audio files are located.
   // Maybe not cross platform friendly?
-  List<String> audioLibraryUrls = <String>["/storage/emulated/0/test_lunify"];
+  List<String> audioLibraryUrls = <String>[];
 
   // This audio player object is owned by this class
   final _audioPlayer = AudioPlayer();
@@ -37,9 +38,6 @@ class AudioServiceProvider extends ChangeNotifier {
 
   AudioPlaylist currentPlaylist = AudioPlaylist(playlistName: "Current Playlist");
   AudioPlaylist library = AudioPlaylist(playlistName: "Library");  // Contains all the audio files that the device has to offer.
-
-
-  late Function(SongModel) _onSongClicked;
 
   bool _audioMetadataLoaded = false; 
 
@@ -54,13 +52,13 @@ class AudioServiceProvider extends ChangeNotifier {
     songArtist: "", 
     coverPicture: null);
 
+  int currentSongPlayingIndexInCurrentPlaylist = 0; 
+
   AudioServiceProvider(List<String> additionalAudioLibraryUrls) {
     // Add the additional URLs
     for (String url in additionalAudioLibraryUrls) {
       audioLibraryUrls.add(url);
     }
-
-    _onSongClicked = (model) {};
   }
 
   SongModel getCurrentSongPlaying()             { return currentSongPlaying; }
@@ -118,6 +116,20 @@ class AudioServiceProvider extends ChangeNotifier {
         
         // TEMP
         currentPlaylist = library;
+
+        List<AudioSource> currentPlaylistAudioSources = [];
+        for(SongModel song in currentPlaylist.songs) {
+          currentPlaylistAudioSources.add(AudioSource.uri(Uri.parse(song.songUrl)));
+        }
+        // Create the playlist in the "audio player"
+        final playlist = ConcatenatingAudioSource(
+          useLazyPreparation: false,
+          shuffleOrder: null,
+          children: currentPlaylistAudioSources
+        );
+        
+        _audioPlayer.setAudioSource(playlist, initialIndex: 0, initialPosition: Duration.zero);
+
         return true;
       } else {
         return false;
@@ -157,16 +169,34 @@ class AudioServiceProvider extends ChangeNotifier {
     _audioPlayer.setPitch(pitchFactor);
   }
 
-  void setSongClickedCallback(void Function(SongModel)onSongClicked) {
-    _onSongClicked = onSongClicked;
+  void songClickedCallback(int indexInCurrentPlaylist) {
+    currentSongPlayingIndexInCurrentPlaylist = indexInCurrentPlaylist;
+    print("Song: $currentSongPlayingIndexInCurrentPlaylist");
+    _currentTabs.animateTo(_playerTabIndex);
+    currentSongPlaying = currentPlaylist.songs[indexInCurrentPlaylist];
+    _audioPlayer.seek(Duration.zero, index: currentSongPlayingIndexInCurrentPlaylist);
+    _audioPlayer.play();
   }
 
-  void songClickedCallback(SongModel model) {
-    _currentTabs.animateTo(_playerTabIndex);
-    _audioPlayer.stop();
-    // _onSongClicked(model);
-    currentSongPlaying = model;
-    _audioPlayer.setUrl(model.songUrl);
-    _audioPlayer.play();
+  void previousSong() {
+    if (currentSongPlayingIndexInCurrentPlaylist > -1) {
+      _audioPlayer.seekToPrevious();
+      currentSongPlaying = currentPlaylist.songs[
+        currentSongPlayingIndexInCurrentPlaylist == 0 ? 
+        0 :
+        --currentSongPlayingIndexInCurrentPlaylist 
+      ];
+    }
+  }
+
+  void nextSong() {    
+    if (currentSongPlayingIndexInCurrentPlaylist < currentPlaylist.songs.length) {
+      _audioPlayer.seekToNext();
+      currentSongPlaying = currentPlaylist.songs[
+        currentSongPlayingIndexInCurrentPlaylist == currentPlaylist.songs.length - 1 ? 
+        currentPlaylist.songs.length - 1 :
+        ++currentSongPlayingIndexInCurrentPlaylist
+      ];
+    }
   }
 }

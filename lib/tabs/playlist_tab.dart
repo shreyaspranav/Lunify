@@ -57,13 +57,7 @@ class _PlaylistTabState extends State<PlaylistTab> {
                   size: 55,
                 ),
               onTap: () {
-                Provider.of<AudioServiceProvider>(context, listen: false).songClickedCallback(
-                  SongModel(
-                    songUrl:       currentPlaylist.songs[index].songUrl, 
-                    songName:      currentPlaylist.songs[index].songName, 
-                    songArtist:    currentPlaylist.songs[index].songArtist, 
-                    coverPicture:  currentPlaylist.songs[index].coverPicture
-                ));
+                Provider.of<AudioServiceProvider>(context, listen: false).songClickedCallback(index);
               },
             );
           }

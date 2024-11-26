@@ -123,7 +123,7 @@ class _PlayerTabState extends State<PlayerTab> {
     Provider.of<AudioServiceProvider>(context, listen: false).getAudioPlayer().durationStream.listen((duration) {
       if(mounted) {
         setState(() {
-          _songDuration = duration!;
+          _songDuration = duration ?? Duration.zero;
         });
       }
     });
@@ -167,9 +167,31 @@ class _PlayerTabState extends State<PlayerTab> {
                               heightFactor: 0.3,
                               child: Column(
                                 children: [
-                                  SizedBox(height: 30),
-                                  Text("Set Playback Speed/Pitch"),
-                                  SizedBox(height: 40),
+                                  SizedBox(height: 25),
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                      left: 20,
+                                      right: 10
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text("Set Playback Speed/Pitch"),
+                                        TextButton(
+                                          onPressed: () {
+                                            setter(() {
+                                              _playbackSpeed = 1.0;
+                                              _playbackPitch = 1.0;
+                                              Provider.of<AudioServiceProvider>(context, listen: false).setPlaybackSpeed(_playbackSpeed);
+                                              Provider.of<AudioServiceProvider>(context, listen: false).setPlaybackPitch(_playbackPitch);
+                                              setState(() {});
+                                            });
+                                          }, 
+                                          child: Text("Reset"))
+                                      ],
+                                    ),
+                                  ),
+                                  SizedBox(height: 10),
                                   Slider(
                                     min: 0.6,
                                     max: 1.4,
@@ -181,6 +203,7 @@ class _PlayerTabState extends State<PlayerTab> {
                                         _playbackPitch = v;
                                         Provider.of<AudioServiceProvider>(context, listen: false).setPlaybackSpeed(v);
                                         Provider.of<AudioServiceProvider>(context, listen: false).setPlaybackPitch(v);
+                                        setState(() {});
                                       });
                                     }
                                   )
@@ -276,7 +299,23 @@ class _PlayerTabState extends State<PlayerTab> {
                   icon: getCurrentRepeatIcon()
                 ),
                 IconButton(
-                  onPressed: () {}, 
+                  onPressed: () {
+                    Provider.of<AudioServiceProvider>(context, listen: false).previousSong();
+                    setState(() {
+                      _currentSongPlaying = Provider.of<AudioServiceProvider>(context, listen: false).getCurrentSongPlaying();
+                      coverPicture = _currentSongPlaying.coverPicture ?? 
+                        const Padding(
+                          padding: EdgeInsets.only(
+                            top: 20,
+                            bottom: 20
+                          ),
+                          child: Icon(
+                            Icons.music_note_outlined,
+                            size: 300,
+                          ),
+                        );
+                    });
+                  }, 
                   icon: const Icon(Icons.skip_previous)
                 ),
                 IconButton(
@@ -285,7 +324,23 @@ class _PlayerTabState extends State<PlayerTab> {
                   iconSize: 50,
                 ),
                 IconButton(
-                  onPressed: () {}, 
+                  onPressed: () {
+                    Provider.of<AudioServiceProvider>(context, listen: false).nextSong();
+                    setState(() {
+                      _currentSongPlaying = Provider.of<AudioServiceProvider>(context, listen: false).getCurrentSongPlaying();
+                      coverPicture = _currentSongPlaying.coverPicture ?? 
+                        const Padding(
+                          padding: EdgeInsets.only(
+                            top: 20,
+                            bottom: 20
+                          ),
+                          child: Icon(
+                            Icons.music_note_outlined,
+                            size: 300,
+                          ),
+                        );
+                    });
+                  }, 
                   icon: const Icon(Icons.skip_next)
                 ),
                 IconButton(
