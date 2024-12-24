@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lunify/audio_service_provider.dart';
 import 'package:lunify/pages/settings_page.dart';
 import 'package:lunify/tabs/home_tab.dart';
+import 'package:lunify/tabs/library_tab.dart';
 import 'package:lunify/tabs/player_tab.dart';
 import 'package:lunify/tabs/playlist_tab.dart';
 
@@ -44,14 +45,12 @@ class MyApp extends StatefulWidget {
     const PlaylistTab(),
     PlayerTab(),
     const HomeTab(),
-    toBeImplemented,
   ];
 
   static const List<Tab> tabs = <Tab>[
     Tab(icon: Icon(Icons.home_filled)),
     Tab(icon: Icon(Icons.music_note)),
     Tab(icon: Icon(Icons.album)),
-    Tab(icon: Icon(Icons.person_2_sharp))
   ];
 
   @override
@@ -69,7 +68,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
     super.initState();
 
     _tabController = TabController(
-      length: MyApp.tabs.length, 
+      length: 3, 
       initialIndex: 2,
       vsync: this
     );
@@ -169,8 +168,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
         children: [
           const PlaylistTab(),
           PlayerTab(),
-          const HomeTab(),
-          MyApp.toBeImplemented
+          const HomeTab()
         ]
       ),
           // bottomNavigationBar: BottomAppBar(

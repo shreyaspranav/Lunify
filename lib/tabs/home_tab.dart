@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lunify/tabs/library_tab.dart';
 
 class HomeTab extends StatelessWidget {
   const HomeTab({super.key});
@@ -13,7 +14,7 @@ class HomeTab extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            margin: const EdgeInsets.fromLTRB(20, 30, 20, 30),
+            margin: const EdgeInsets.fromLTRB(20, 20, 20, 20),
             child: const TextField(
               decoration: InputDecoration(
                 border: OutlineInputBorder(
@@ -34,11 +35,11 @@ class HomeTab extends StatelessWidget {
               children: [
                 customContainer(
                   width: 175,
-                  height: 150,
+                  height: 160,
                   displayText: "Most Played", 
                   gradient: const LinearGradient(
                     colors: [
-                      Color.fromARGB(32, 0, 188, 212), Color.fromARGB(255, 0, 188, 212)
+                      const Color(0x22FFE1FF), const Color(0xFF7E60BF)
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -50,11 +51,11 @@ class HomeTab extends StatelessWidget {
                 ),
                 customContainer(
                   width: 175,
-                  height: 150,
+                  height: 160,
                   displayText: "Recently Played", 
                   gradient: const LinearGradient(
                     colors: [
-                      Color.fromARGB(32, 0, 188, 212), Color.fromARGB(255, 0, 188, 212)
+                      const Color(0x22FFE1FF), const Color(0xFF7E60BF)
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -63,6 +64,28 @@ class HomeTab extends StatelessWidget {
                   onTap: () {} 
                 )
               ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(15),
+            child: customContainer(
+              width: MediaQuery.sizeOf(context).width,
+              height: 100,
+              displayText: "Music Library",
+              fontSize: 20,
+              gradient: LinearGradient(
+                colors: [
+                  const Color(0x22FFE1FF), const Color(0xFF7E60BF)
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => LibraryTab()) 
+                );
+              },
             ),
           ),
           const Padding(
