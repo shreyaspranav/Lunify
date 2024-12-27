@@ -8,6 +8,7 @@ import 'package:lunify/models/song_model.dart';
 import 'package:audio_metadata_extractor/audio_metadata_extractor.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:provider/provider.dart';
 
 class AudioPlaylist {
   String playlistName;
@@ -28,7 +29,7 @@ class AudioPlaylist {
 class AudioServiceProvider extends ChangeNotifier {
   // List that contatins the URLs of the folders where the audio files are located.
   // Maybe not cross platform friendly?
-  List<String> _audioLibraryUrls = <String>[];
+  List<String> _audioLibraryUrls = <String>["/storage/emulated/0/test_lunify"];
 
   // This audio player object is owned by this class
   final _audioPlayer = AudioPlayer();
@@ -39,7 +40,8 @@ class AudioServiceProvider extends ChangeNotifier {
   AudioPlaylist _currentPlaylist = AudioPlaylist(playlistName: "Current Playlist");
   AudioPlaylist _library = AudioPlaylist(playlistName: "Library");  // Contains all the audio files that the device has to offer.
 
-  bool _audioMetadataLoaded = false; 
+  bool _audioMetadataLoaded = false;
+  bool _audioMetadataLoadingAsync = false;
 
   // These are used to switch to the player tab when a song is clicked.
   late TabController _currentTabs;
@@ -52,7 +54,10 @@ class AudioServiceProvider extends ChangeNotifier {
     songArtist: "", 
     coverPicture: null);
 
-  int _currentSongPlayingIndexInCurrentPlaylist = 0; 
+  int _currentSongPlayingIndexInCurrentPlaylist = 0;
+
+  // The progress of loading the metadata of the songs. 0 represents 0% done, 1.0 repesents 100% done
+  double _audioMetadataLoadingProgress = 0.0; 
 
   AudioServiceProvider(List<String> additionalAudioLibraryUrls) {
     // Add the additional URLs
@@ -71,6 +76,9 @@ class AudioServiceProvider extends ChangeNotifier {
     if (status.isDenied) {
       return false;
     } else {
+      if(_audioMetadataLoadingAsync) return false;
+
+      _audioMetadataLoadingAsync = true;
       if(forceReload || !_audioMetadataLoaded) {
 
         print("Storage Permission Accepted!");
@@ -90,6 +98,9 @@ class AudioServiceProvider extends ChangeNotifier {
 
         for(List<FileSystemEntity> files in fileEachAudioUrl) {
           for(var file in files) {
+
+            print("--------------------------------------------------------------------------------------------------");
+
             if(file is File && (file.path.endsWith('mp3') || file.path.endsWith('flac'))) {
               var songMetadata = await AudioMetadata.extract(file);
               if(songMetadata != null) {
@@ -109,13 +120,14 @@ class AudioServiceProvider extends ChangeNotifier {
             }
             fileCount++;
             onProgressCallback(fileCount / totalFiles);
+            _audioMetadataLoadingProgress = fileCount / totalFiles;
           }
         }
 
         _audioMetadataLoaded = true;
         
         // TEMP
-        _currentPlaylist = _library;
+        // _currentPlaylist = _library;
 
         List<AudioSource> _currentPlaylistAudioSources = [];
         for(SongModel song in _currentPlaylist.songs) {
@@ -130,12 +142,17 @@ class AudioServiceProvider extends ChangeNotifier {
         
         _audioPlayer.setAudioSource(playlist, initialIndex: 0, initialPosition: Duration.zero);
 
+        _audioMetadataLoadingAsync = false;
         return true;
       } else {
+        _audioMetadataLoadingAsync = false;
         return false;
       }
     }
   }
+
+  double getAudioMetadataLoadingProgress() { return _audioMetadataLoadingProgress; }
+  AudioPlaylist getAudioLibrary() { return _library; }
 
   void addAudioLibraryUrl(String url) {
     _audioLibraryUrls.add(url);

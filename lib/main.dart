@@ -60,8 +60,6 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
 
   late TabController _tabController;
-  bool _isAudioMetadataLoading = true;
-  double _audioMetadataLoadingProgress = 0.0;
 
   @override
   void initState() {
@@ -75,6 +73,10 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
 
     Provider.of<AudioServiceProvider>(context, listen: false).setTabController(_tabController);
     Provider.of<AudioServiceProvider>(context, listen: false).setPlayerTabIndex(1);
+  }
+
+  void showLoadingDialog(BuildContext context) {
+    
   }
 
   @override

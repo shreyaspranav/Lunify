@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:lunify/audio_service_provider.dart';
 import 'package:lunify/image_util.dart';
 import 'package:lunify/models/song_model.dart';
+import 'package:lunify/widgets/song_list_view.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:audio_metadata_extractor/audio_metadata_extractor.dart';
 import 'package:provider/provider.dart';
@@ -28,13 +29,8 @@ class _PlaylistTabState extends State<PlaylistTab> {
   @override
   void initState() {
     super.initState();
-    // _requstPermissionAndScanSongs();
 
     _audioServiceProvider = Provider.of<AudioServiceProvider>(context, listen: false);
-
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      _loadAudioMetadata();
-    });
   }
 
   @override
@@ -43,65 +39,23 @@ class _PlaylistTabState extends State<PlaylistTab> {
     AudioPlaylist currentPlaylist = _audioServiceProvider!.getCurrentPlaylist();
 
     return Scaffold(
-      body: 
-      _audioServiceProvider!.isMetadataLoaded() ? 
-        ListView.builder(
-          itemCount: currentPlaylist.songs.length,
-          itemBuilder: (context, index) {
-            return ListTile(
-              title: Text(currentPlaylist.songs[index].songName),
-              subtitle: Text(currentPlaylist.songs[index].songArtist),
-              leading:  currentPlaylist.songs[index].coverPicture ?? 
-                const Icon(
-                  Icons.music_note_outlined,
-                  size: 55,
-                ),
-              onTap: () {
-                Provider.of<AudioServiceProvider>(context, listen: false).songClickedCallback(index);
-              },
-            );
-          }
-        ) : 
+      body: currentPlaylist.songs.isEmpty ? 
         Padding(
           padding: const EdgeInsets.all(20),
           child: Center(
             child: Column(
               children: [
-                Text("Loading Audio Metadata..."),
+                Icon(
+                  Icons.playlist_remove, 
+                  size: 200,),
                 SizedBox(height: 10),
-                LinearProgressIndicator(
-                  value: _audioMetadataLoadingProgress,
-                  minHeight: 12,
-                  borderRadius: BorderRadius.all(Radius.circular(12.0)),
-                ),
+                Text("The Current Playlist seems to be empty, add songs to the current playlist."),
                 SizedBox(width: 10),
               ],
             )
           )
-        )
+        ) : 
+        SongListView(songsToDisplay: currentPlaylist.songs, loading: false)
     );
-  }
-
-  void _loadAudioMetadata() {
-    setState(() {
-      _isAudioMetadataLoading = true;
-    });
-
-    var success = Provider.of<AudioServiceProvider>(context, listen: false).loadAudioMetadataFromDisk((progress) {
-      if(mounted) {
-        setState(() {
-          _audioMetadataLoadingProgress = progress;
-          print(progress);
-          if(_audioMetadataLoadingProgress == 1.0) {
-              _isAudioMetadataLoading = false;
-              print("False Set.");
-          }
-        });  
-      }
-    });
-
-    success.then((is_success){
-
-    });
   }
 }

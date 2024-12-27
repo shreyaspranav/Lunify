@@ -1,6 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:lunify/tabs/playlist_tab.dart';
+import 'package:lunify/audio_service_provider.dart';
+import 'package:lunify/tabs/library_page/music_tab.dart';
+import 'package:lunify/tabs/library_page/album_tab.dart';
+import 'package:lunify/tabs/library_page/artist_tab.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter_isolate/flutter_isolate.dart';
 
 class LibraryTab extends StatefulWidget {
   const LibraryTab({super.key});
@@ -13,11 +18,41 @@ class _LibraryTabState extends State<LibraryTab> with SingleTickerProviderStateM
 
   late TabController _tabController;
 
+  bool _isAudioMetadataLoading = true;
+  double _audioMetadataLoadingProgress = 0.0;
+
+  void _loadAudioMetadata() {
+    setState(() {
+      _isAudioMetadataLoading = true;
+    });
+
+    var success = Provider.of<AudioServiceProvider>(context, listen: false).loadAudioMetadataFromDisk((progress) {
+      if(mounted) {
+        setState(() {
+          _audioMetadataLoadingProgress = progress;
+          print(progress);
+          if(_audioMetadataLoadingProgress == 1.0) {
+              _isAudioMetadataLoading = false;
+          }
+        });  
+      }
+    });
+
+    success.then((isSuccess) {
+
+    });
+  }
+
+  bool isMetadataLoading() {
+    return _isAudioMetadataLoading;
+  }
+
   @override
   void initState() {
     super.initState();
 
     _tabController = TabController.new(length: 3, vsync: this);
+    _loadAudioMetadata();
   }
 
   @override
@@ -37,10 +72,10 @@ class _LibraryTabState extends State<LibraryTab> with SingleTickerProviderStateM
       ),
       body: TabBarView(
         controller: _tabController,
-        children: const [
-          PlaylistTab(),
-          Placeholder(color: Colors.green,),
-          Placeholder(color: Colors.blue,)
+        children: [
+          MusicTab(isLoading: isMetadataLoading),
+          AlbumTab(),
+          ArtistTab()
         ] 
       ),
     );

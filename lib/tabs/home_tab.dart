@@ -1,8 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:lunify/audio_service_provider.dart';
 import 'package:lunify/pages/library_page.dart';
+import 'package:provider/provider.dart';
 
-class HomeTab extends StatelessWidget {
+class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
+
+  @override
+  State<HomeTab> createState() => _HomeTabState();
+}
+
+class _HomeTabState extends State<HomeTab> {
+
+  void initState() {
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
