@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:lunify/tabs/library_tab.dart';
+import 'package:lunify/pages/library_page.dart';
 
 class HomeTab extends StatelessWidget {
   const HomeTab({super.key});
-
-  static const num cardWidth = 175;
-  static const num cardHeight = 150;
 
   @override
   Widget build(BuildContext context) {

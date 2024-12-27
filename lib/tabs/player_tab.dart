@@ -130,8 +130,6 @@ class _PlayerTabState extends State<PlayerTab> {
     });
   }
 
-  
-
   // The build method: --------------------------------------------------------------------------------------------------
   @override
   Widget build(BuildContext context) {

@@ -28,16 +28,16 @@ class AudioPlaylist {
 class AudioServiceProvider extends ChangeNotifier {
   // List that contatins the URLs of the folders where the audio files are located.
   // Maybe not cross platform friendly?
-  List<String> audioLibraryUrls = <String>[];
+  List<String> _audioLibraryUrls = <String>[];
 
   // This audio player object is owned by this class
   final _audioPlayer = AudioPlayer();
   
   // List of playlists
-  List<AudioPlaylist> playlists = [];
+  List<AudioPlaylist> _playlists = [];
 
-  AudioPlaylist currentPlaylist = AudioPlaylist(playlistName: "Current Playlist");
-  AudioPlaylist library = AudioPlaylist(playlistName: "Library");  // Contains all the audio files that the device has to offer.
+  AudioPlaylist _currentPlaylist = AudioPlaylist(playlistName: "Current Playlist");
+  AudioPlaylist _library = AudioPlaylist(playlistName: "Library");  // Contains all the audio files that the device has to offer.
 
   bool _audioMetadataLoaded = false; 
 
@@ -46,25 +46,25 @@ class AudioServiceProvider extends ChangeNotifier {
   late int _playerTabIndex;
   
   // The current song playing: initially it contains empty values.
-  SongModel currentSongPlaying = SongModel(
+  SongModel _currentSongPlaying = SongModel(
     songUrl: "", 
     songName: "", 
     songArtist: "", 
     coverPicture: null);
 
-  int currentSongPlayingIndexInCurrentPlaylist = 0; 
+  int _currentSongPlayingIndexInCurrentPlaylist = 0; 
 
   AudioServiceProvider(List<String> additionalAudioLibraryUrls) {
     // Add the additional URLs
     for (String url in additionalAudioLibraryUrls) {
-      audioLibraryUrls.add(url);
+      _audioLibraryUrls.add(url);
     }
   }
 
-  SongModel getCurrentSongPlaying()             { return currentSongPlaying; }
-  AudioPlaylist getCurrentPlaylist()            { return currentPlaylist; }
+  SongModel getCurrentSongPlaying()             { return _currentSongPlaying; }
+  AudioPlaylist getCurrentPlaylist()            { return _currentPlaylist; }
 
-  void setCurrentSongPlaying(SongModel model)   { currentSongPlaying = model; notifyListeners(); }
+  void setCurrentSongPlaying(SongModel model)   { _currentSongPlaying = model; notifyListeners(); }
 
   Future<bool> loadAudioMetadataFromDisk(void Function(double)onProgressCallback, [bool forceReload = false]) async {
     var status = await Permission.storage.status;
@@ -80,7 +80,7 @@ class AudioServiceProvider extends ChangeNotifier {
 
         List<List<FileSystemEntity>> fileEachAudioUrl = [];
 
-        for(String url in audioLibraryUrls) {
+        for(String url in _audioLibraryUrls) {
           Directory urlDirectory = Directory(url);
           List<FileSystemEntity> files = urlDirectory.listSync(recursive: true);
 
@@ -97,7 +97,7 @@ class AudioServiceProvider extends ChangeNotifier {
                 if(ImageUtil.isValidImage(songMetadata.coverData ?? [])) {
                   imageToAdd = Image.memory(Uint8List.fromList(songMetadata.coverData ?? []));
                 }
-                library.songs.add(
+                _library.songs.add(
                   SongModel(
                     songUrl: file.path,
                     songName: songMetadata.trackName ?? "Unknown name", 
@@ -115,17 +115,17 @@ class AudioServiceProvider extends ChangeNotifier {
         _audioMetadataLoaded = true;
         
         // TEMP
-        currentPlaylist = library;
+        _currentPlaylist = _library;
 
-        List<AudioSource> currentPlaylistAudioSources = [];
-        for(SongModel song in currentPlaylist.songs) {
-          currentPlaylistAudioSources.add(AudioSource.uri(Uri.parse(song.songUrl)));
+        List<AudioSource> _currentPlaylistAudioSources = [];
+        for(SongModel song in _currentPlaylist.songs) {
+          _currentPlaylistAudioSources.add(AudioSource.uri(Uri.parse(song.songUrl)));
         }
         // Create the playlist in the "audio player"
         final playlist = ConcatenatingAudioSource(
           useLazyPreparation: false,
           shuffleOrder: null,
-          children: currentPlaylistAudioSources
+          children: _currentPlaylistAudioSources
         );
         
         _audioPlayer.setAudioSource(playlist, initialIndex: 0, initialPosition: Duration.zero);
@@ -138,7 +138,7 @@ class AudioServiceProvider extends ChangeNotifier {
   }
 
   void addAudioLibraryUrl(String url) {
-    audioLibraryUrls.add(url);
+    _audioLibraryUrls.add(url);
   }
 
   bool isMetadataLoaded() { 
@@ -170,32 +170,32 @@ class AudioServiceProvider extends ChangeNotifier {
   }
 
   void songClickedCallback(int indexInCurrentPlaylist) {
-    currentSongPlayingIndexInCurrentPlaylist = indexInCurrentPlaylist;
-    print("Song: $currentSongPlayingIndexInCurrentPlaylist");
+    _currentSongPlayingIndexInCurrentPlaylist = indexInCurrentPlaylist;
+    print("Song: $_currentSongPlayingIndexInCurrentPlaylist");
     _currentTabs.animateTo(_playerTabIndex);
-    currentSongPlaying = currentPlaylist.songs[indexInCurrentPlaylist];
-    _audioPlayer.seek(Duration.zero, index: currentSongPlayingIndexInCurrentPlaylist);
+    _currentSongPlaying = _currentPlaylist.songs[indexInCurrentPlaylist];
+    _audioPlayer.seek(Duration.zero, index: _currentSongPlayingIndexInCurrentPlaylist);
     _audioPlayer.play();
   }
 
   void previousSong() {
-    if (currentSongPlayingIndexInCurrentPlaylist > -1) {
+    if (_currentSongPlayingIndexInCurrentPlaylist > -1) {
       _audioPlayer.seekToPrevious();
-      currentSongPlaying = currentPlaylist.songs[
-        currentSongPlayingIndexInCurrentPlaylist == 0 ? 
+      _currentSongPlaying = _currentPlaylist.songs[
+        _currentSongPlayingIndexInCurrentPlaylist == 0 ? 
         0 :
-        --currentSongPlayingIndexInCurrentPlaylist 
+        --_currentSongPlayingIndexInCurrentPlaylist 
       ];
     }
   }
 
   void nextSong() {    
-    if (currentSongPlayingIndexInCurrentPlaylist < currentPlaylist.songs.length) {
+    if (_currentSongPlayingIndexInCurrentPlaylist < _currentPlaylist.songs.length) {
       _audioPlayer.seekToNext();
-      currentSongPlaying = currentPlaylist.songs[
-        currentSongPlayingIndexInCurrentPlaylist == currentPlaylist.songs.length - 1 ? 
-        currentPlaylist.songs.length - 1 :
-        ++currentSongPlayingIndexInCurrentPlaylist
+      _currentSongPlaying = _currentPlaylist.songs[
+        _currentSongPlayingIndexInCurrentPlaylist == _currentPlaylist.songs.length - 1 ? 
+        _currentPlaylist.songs.length - 1 :
+        ++_currentSongPlayingIndexInCurrentPlaylist
       ];
     }
   }

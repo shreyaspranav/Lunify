@@ -87,7 +87,7 @@ class _PlaylistTabState extends State<PlaylistTab> {
       _isAudioMetadataLoading = true;
     });
 
-    Provider.of<AudioServiceProvider>(context, listen: false).loadAudioMetadataFromDisk((progress) {
+    var success = Provider.of<AudioServiceProvider>(context, listen: false).loadAudioMetadataFromDisk((progress) {
       if(mounted) {
         setState(() {
           _audioMetadataLoadingProgress = progress;
@@ -98,6 +98,10 @@ class _PlaylistTabState extends State<PlaylistTab> {
           }
         });  
       }
+    });
+
+    success.then((is_success){
+
     });
   }
 }

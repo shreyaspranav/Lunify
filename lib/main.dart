@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lunify/audio_service_provider.dart';
 import 'package:lunify/pages/settings_page.dart';
 import 'package:lunify/tabs/home_tab.dart';
-import 'package:lunify/tabs/library_tab.dart';
+import 'package:lunify/pages/library_page.dart';
 import 'package:lunify/tabs/player_tab.dart';
 import 'package:lunify/tabs/playlist_tab.dart';
 
