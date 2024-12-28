@@ -74,80 +74,78 @@ class AudioServiceProvider extends ChangeNotifier {
   Future<bool> loadAudioMetadataFromDisk(void Function(double)onProgressCallback, [bool forceReload = false]) async {
     var status = await Permission.storage.status;
     if (status.isDenied) {
-      return false;
-    } else {
-      if(_audioMetadataLoadingAsync) return false;
-
-      _audioMetadataLoadingAsync = true;
-      if(forceReload || !_audioMetadataLoaded) {
-
-        print("Storage Permission Accepted!");
-
-        int totalFiles = 0;
-        int fileCount = 0;
-
-        List<List<FileSystemEntity>> fileEachAudioUrl = [];
-
-        for(String url in _audioLibraryUrls) {
-          Directory urlDirectory = Directory(url);
-          List<FileSystemEntity> files = urlDirectory.listSync(recursive: true);
-
-          fileEachAudioUrl.add(files);
-          totalFiles += files.length;
-        }
-
-        for(List<FileSystemEntity> files in fileEachAudioUrl) {
-          for(var file in files) {
-
-            print("--------------------------------------------------------------------------------------------------");
-
-            if(file is File && (file.path.endsWith('mp3') || file.path.endsWith('flac'))) {
-              var songMetadata = await AudioMetadata.extract(file);
-              if(songMetadata != null) {
-                Image? imageToAdd = null;
-                if(ImageUtil.isValidImage(songMetadata.coverData ?? [])) {
-                  imageToAdd = Image.memory(Uint8List.fromList(songMetadata.coverData ?? []));
-                }
-                _library.songs.add(
-                  SongModel(
-                    songUrl: file.path,
-                    songName: songMetadata.trackName ?? "Unknown name", 
-                    songArtist: songMetadata.firstArtists  ?? "Unknown artist", 
-                    coverPicture: imageToAdd
-                  )
-                );
-              }
-            }
-            fileCount++;
-            onProgressCallback(fileCount / totalFiles);
-            _audioMetadataLoadingProgress = fileCount / totalFiles;
-          }
-        }
-
-        _audioMetadataLoaded = true;
-        
-        // TEMP
-        // _currentPlaylist = _library;
-
-        List<AudioSource> _currentPlaylistAudioSources = [];
-        for(SongModel song in _currentPlaylist.songs) {
-          _currentPlaylistAudioSources.add(AudioSource.uri(Uri.parse(song.songUrl)));
-        }
-        // Create the playlist in the "audio player"
-        final playlist = ConcatenatingAudioSource(
-          useLazyPreparation: false,
-          shuffleOrder: null,
-          children: _currentPlaylistAudioSources
-        );
-        
-        _audioPlayer.setAudioSource(playlist, initialIndex: 0, initialPosition: Duration.zero);
-
-        _audioMetadataLoadingAsync = false;
-        return true;
-      } else {
-        _audioMetadataLoadingAsync = false;
+      var result = await Permission.storage.request();
+      if(result.isDenied) {
         return false;
       }
+    } 
+    if(_audioMetadataLoadingAsync) return false;
+
+      _audioMetadataLoadingAsync = true;
+    if(forceReload || !_audioMetadataLoaded) {
+
+      print("Storage Permission Accepted!");
+      
+      int totalFiles = 0;
+      int fileCount = 0;
+      
+      List<List<FileSystemEntity>> fileEachAudioUrl = [];
+      
+      for(String url in _audioLibraryUrls) {
+        Directory urlDirectory = Directory(url);
+        List<FileSystemEntity> files = urlDirectory.listSync(recursive: true);
+        fileEachAudioUrl.add(files);
+        totalFiles += files.length;
+      }
+      
+      for(List<FileSystemEntity> files in fileEachAudioUrl) {
+        for(var file in files) {
+          print("--------------------------------------------------------------------------------------------------");
+          if(file is File && (file.path.endsWith('mp3') || file.path.endsWith('flac'))) {
+            var songMetadata = await AudioMetadata.extract(file);
+            if(songMetadata != null) {
+              Image? imageToAdd = null;
+              if(ImageUtil.isValidImage(songMetadata.coverData ?? [])) {
+                imageToAdd = Image.memory(Uint8List.fromList(songMetadata.coverData ?? []));
+              }
+              _library.songs.add(
+                SongModel(
+                  songUrl: file.path,
+                  songName: songMetadata.trackName ?? "Unknown name", 
+                  songArtist: songMetadata.firstArtists  ?? "Unknown artist", 
+                  coverPicture: imageToAdd
+                )
+              );
+            }
+          }
+      
+          fileCount++;
+          onProgressCallback(fileCount / totalFiles);
+          _audioMetadataLoadingProgress = fileCount / totalFiles;
+        }
+      }
+      _audioMetadataLoaded = true;
+      
+      // TEMP
+      // _currentPlaylist = _library;
+      List<AudioSource> _currentPlaylistAudioSources = [];
+      for(SongModel song in _currentPlaylist.songs) {
+        _currentPlaylistAudioSources.add(AudioSource.uri(Uri.parse(song.songUrl)));
+      }
+
+      // Create the playlist in the "audio player"
+      final playlist = ConcatenatingAudioSource(
+        useLazyPreparation: false,
+        shuffleOrder: null,
+        children: _currentPlaylistAudioSources
+      );
+      
+      _audioPlayer.setAudioSource(playlist, initialIndex: 0, initialPosition: Duration.zero);
+      _audioMetadataLoadingAsync = false;
+      return true;
+    } else {
+      _audioMetadataLoadingAsync = false;
+      return false;
     }
   }
 
