@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:lunify/image_util.dart';
+import 'package:lunify/models/album_model.dart';
 import 'package:lunify/models/song_model.dart';
 import 'package:audio_metadata_extractor/audio_metadata_extractor.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -42,6 +43,9 @@ class AudioServiceProvider extends ChangeNotifier {
   AudioPlaylist _currentPlaylist = AudioPlaylist(playlistName: "Current Playlist");
   AudioPlaylist _library = AudioPlaylist(playlistName: "Library");  // Contains all the audio files that the device has to offer.
 
+  // Convinient list of albums. This will be filled when deserializing from cache or loading from disk.
+  List<AlbumModel> _albums = [];
+
   bool _audioMetadataLoaded = false;
   bool _audioMetadataLoadingAsync = false;
 
@@ -53,6 +57,7 @@ class AudioServiceProvider extends ChangeNotifier {
   SongModel _currentSongPlaying = SongModel(
     songUrl: "", 
     songName: "", 
+    songAlbum: "", 
     songArtist: "", 
     coverPicture: null,
     coverPictureRaw: []
@@ -188,11 +193,29 @@ class AudioServiceProvider extends ChangeNotifier {
               SongModel(
                 songUrl: file.path,
                 songName: songMetadata.trackName ?? "Unknown name", 
+                songAlbum: songMetadata.album ?? "Unknown Album", 
                 songArtist: songMetadata.firstArtists  ?? "Unknown artist", 
                 coverPicture: imageToAdd,
                 coverPictureRaw: songMetadata.coverData
               )
             );
+
+            if(_albums.any((album) => album.name == songMetadata.album)) {
+              AlbumModel? album = _albums.firstWhere(
+                (album) => album.name == songMetadata.album,
+              );
+              album.trackCount++;
+            }
+            else {
+              _albums.add(
+                AlbumModel(
+                  name: songMetadata.album ?? "Unknown Album", 
+                  artist: songMetadata.firstArtists ?? "Unknown artist", 
+                  trackCount: 1,
+                  coverImage: imageToAdd
+                )
+              );
+            }
           }
         }
       
@@ -236,6 +259,7 @@ class AudioServiceProvider extends ChangeNotifier {
     for(SongModel audioFile in _library.songs) {
       p.packString(audioFile.songUrl);
       p.packString(audioFile.songName);
+      p.packString(audioFile.songAlbum);
       p.packString(audioFile.songArtist);
       p.packBinary(audioFile.coverPictureRaw);
     }
@@ -254,14 +278,16 @@ class AudioServiceProvider extends ChangeNotifier {
       
       String? sUrl = unpacker.unpackString();
       String? sName = unpacker.unpackString();
+      String? sAlbum = unpacker.unpackString();
       String? sArtist = unpacker.unpackString();
       
       List<int>? sCoverPic = unpacker.unpackBinary();
 
       SongModel model = SongModel(
-        songUrl: sUrl ?? "fdsfdsa", 
-        songName: sName ?? "Fdsfdasfdas", 
-        songArtist: sArtist ?? "fdsaf", 
+        songUrl: sUrl ?? "", 
+        songName: sName ?? "Unknown Song", 
+        songAlbum: sAlbum ?? "Unknown Album", 
+        songArtist: sArtist ?? "Unknown Artist", 
         coverPicture: sCoverPic.isEmpty ? null : Image.memory(Uint8List.fromList(sCoverPic)), 
         coverPictureRaw: sCoverPic
       );
@@ -271,6 +297,23 @@ class AudioServiceProvider extends ChangeNotifier {
       String parentPath = Directory(sUrl!).parent.path;
       if(urlEntries.contains(parentPath)) {
         _library.songs.add(model);
+
+        if(_albums.any((album) => album.name == sAlbum)) {
+          AlbumModel? album = _albums.firstWhere(
+            (album) => album.name == sAlbum,
+          );
+          album.trackCount++;
+        }
+        else {
+          _albums.add(
+            AlbumModel(
+              name: sAlbum ?? "Unknown Album", 
+              artist: sArtist ?? "Unknown artist", 
+              trackCount: 1,
+              coverImage: sCoverPic.isEmpty ? null : Image.memory(Uint8List.fromList(sCoverPic))
+            )
+          );
+        }
       }
     }
 
@@ -279,6 +322,7 @@ class AudioServiceProvider extends ChangeNotifier {
 
   double getAudioMetadataLoadingProgress() { return _audioMetadataLoadingProgress; }
   AudioPlaylist getAudioLibrary() { return _library; }
+  List<AlbumModel> getAlbums() { return _albums; }
 
   void addAudioLibraryUrl(String url) {
     _audioLibraryUrls.add(url);
