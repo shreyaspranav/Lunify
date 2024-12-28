@@ -25,7 +25,7 @@ class _LibraryTabState extends State<LibraryTab> with SingleTickerProviderStateM
       _isAudioMetadataLoading = true;
     });
 
-    var success = Provider.of<AudioServiceProvider>(context, listen: false).loadAudioMetadataFromDisk((progress) {
+    var success = Provider.of<AudioServiceProvider>(context, listen: false).loadAudioMetadata((progress) {
       if(mounted) {
         setState(() {
           _audioMetadataLoadingProgress = progress;
@@ -38,7 +38,7 @@ class _LibraryTabState extends State<LibraryTab> with SingleTickerProviderStateM
     });
 
     success.then((isSuccess) {
-
+        _isAudioMetadataLoading = false;
     });
   }
 
@@ -51,7 +51,10 @@ class _LibraryTabState extends State<LibraryTab> with SingleTickerProviderStateM
     super.initState();
 
     _tabController = TabController.new(length: 3, vsync: this);
-    _loadAudioMetadata();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadAudioMetadata();
+    });
   }
 
   @override

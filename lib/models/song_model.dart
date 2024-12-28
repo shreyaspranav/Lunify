@@ -5,12 +5,14 @@ class SongModel {
   String songName;
   String songArtist;
   Image? coverPicture;
+  List<int>? coverPictureRaw;
 
   SongModel({
     required this.songUrl,
     required this.songName,
     required this.songArtist,
-    required this.coverPicture
+    required this.coverPicture,
+    required this.coverPictureRaw
   });
 }
 
@@ -19,7 +21,8 @@ class SharedSongData with ChangeNotifier {
     songUrl: "", 
     songName: "", 
     songArtist: "", 
-    coverPicture: null
+    coverPicture: null,
+    coverPictureRaw: []
   );
 
   SongModel get model => _model;
