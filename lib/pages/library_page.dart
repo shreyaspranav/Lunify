@@ -5,7 +5,6 @@ import 'package:lunify/tabs/library_page/music_tab.dart';
 import 'package:lunify/tabs/library_page/album_tab.dart';
 import 'package:lunify/tabs/library_page/artist_tab.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_isolate/flutter_isolate.dart';
 
 class LibraryTab extends StatefulWidget {
   const LibraryTab({super.key});
