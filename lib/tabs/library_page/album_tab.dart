@@ -30,33 +30,33 @@ class _AlbumTabState extends State<AlbumTab> {
         child: GridView.builder(
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
-            crossAxisSpacing: 5,
-            mainAxisSpacing: 5,
+            crossAxisSpacing: 3,
+            mainAxisSpacing: 3,
             childAspectRatio: 0.75,
           ),
           itemCount: _albums.length,
           itemBuilder: (context, index) {
-            return Material(
-              child: InkWell(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                  decoration: BoxDecoration(
-                    color: Provider.of<ThemeProvider>(context, listen: true).currentTheme == ThemeMode.light ? Colors.grey[200] : const Color.fromARGB(20, 255, 255, 255),
-                    borderRadius: BorderRadius.circular(5),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Expanded(
-                        child: _albums[index].coverImage ??
-                        const Icon(
-                          Icons.album,
-                          size: 120,
-                        ),
+            return InkWell(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Provider.of<ThemeProvider>(context, listen: true).currentTheme == ThemeMode.light ? Colors.grey[200] : const Color.fromARGB(20, 255, 255, 255),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      child: _albums[index].coverImage ??
+                      const Icon(
+                        Icons.album,
+                        size: 120,
                       ),
-                      const SizedBox(height: 10),
-                      SizedBox(
+                    ),
+                    const SizedBox(height: 10),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 5),
+                      child: SizedBox(
                         height: 20,
                         child: LayoutBuilder(
                           builder: (context, constraints) {
@@ -69,7 +69,7 @@ class _AlbumTabState extends State<AlbumTab> {
                               textDirection: TextDirection.ltr,
                             );
                             textPainter.layout(maxWidth: constraints.maxWidth);
-                
+                                    
                             if (textPainter.didExceedMaxLines) {
                               // Use Marquee if text overflows
                               return Marquee(
@@ -93,8 +93,11 @@ class _AlbumTabState extends State<AlbumTab> {
                           },
                         ),
                       ),
-                      const SizedBox(height: 10),
-                      Row(
+                    ),
+                    const SizedBox(height: 10),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 5),
+                      child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Flexible(
@@ -111,7 +114,7 @@ class _AlbumTabState extends State<AlbumTab> {
                                     textDirection: TextDirection.ltr,
                                   );
                                   textPainter.layout(maxWidth: constraints.maxWidth);
-                
+                                    
                                   if (textPainter.didExceedMaxLines) {
                                     return Marquee(
                                       text: _albums[index].artist,
@@ -137,13 +140,13 @@ class _AlbumTabState extends State<AlbumTab> {
                           ),
                         ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                onTap: () {
-                  // On Album tap
-                },
               ),
+              onTap: () {
+                // On Album tap
+              },
             );
           },
         ),
