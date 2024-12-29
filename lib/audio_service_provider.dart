@@ -11,6 +11,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:messagepack/messagepack.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
 
 class AudioPlaylist {
   String playlistName;
@@ -295,7 +296,18 @@ class AudioServiceProvider extends ChangeNotifier {
       // Check if parent path of sUrl is present in urlEntries
       // Add to the library only if the parent path is present in urlEntries
       String parentPath = Directory(sUrl!).parent.path;
-      if(urlEntries.contains(parentPath)) {
+      bool within = false;
+      for(String parentPath in urlEntries) {
+        String normalizedParent = p.normalize(p.absolute(parentPath));
+        String normalizedChild = p.normalize(p.absolute(sUrl));
+
+        if(p.isWithin(normalizedParent, normalizedChild)) {
+          within = true;
+          break;
+        }
+      }
+
+      if(within) {
         _library.songs.add(model);
 
         if(_albums.any((album) => album.name == sAlbum)) {
