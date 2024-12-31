@@ -61,7 +61,8 @@ class AudioServiceProvider extends ChangeNotifier {
     songAlbum: "", 
     songArtist: "", 
     coverPicture: null,
-    coverPictureRaw: []
+    coverPictureRaw: [],
+    trackNumber: 0
   );
 
   int _currentSongPlayingIndexInCurrentPlaylist = 0;
@@ -195,6 +196,7 @@ class AudioServiceProvider extends ChangeNotifier {
                 songUrl: file.path,
                 songName: songMetadata.trackName ?? "Unknown name", 
                 songAlbum: songMetadata.album ?? "Unknown Album", 
+                trackNumber: decodeTrackNumber(songMetadata.trackNo ?? "0"),
                 songArtist: songMetadata.firstArtists  ?? "Unknown artist", 
                 coverPicture: imageToAdd,
                 coverPictureRaw: songMetadata.coverData
@@ -206,6 +208,7 @@ class AudioServiceProvider extends ChangeNotifier {
                 (album) => album.name == songMetadata.album,
               );
               album.trackCount++;
+              album.tracks.add(_library.songs[_library.songs.length - 1]);
             }
             else {
               _albums.add(
@@ -213,9 +216,10 @@ class AudioServiceProvider extends ChangeNotifier {
                   name: songMetadata.album ?? "Unknown Album", 
                   artist: songMetadata.firstArtists ?? "Unknown artist", 
                   trackCount: 1,
-                  coverImage: imageToAdd
+                  coverImage: imageToAdd,
                 )
               );
+              _albums[_albums.length - 1].tracks.add(_library.songs[_library.songs.length - 1]);
             }
           }
         }
@@ -224,6 +228,11 @@ class AudioServiceProvider extends ChangeNotifier {
         onProgressCallback(fileCount / totalFiles);
         _audioMetadataLoadingProgress = fileCount / totalFiles;
       }
+    }
+
+    // Sort all the songs in the albums according to the track number.
+    for(AlbumModel album in _albums) {
+      album.tracks.sort((a, b) => a.trackNumber.compareTo(b.trackNumber));
     }
       
     // TEMP
@@ -261,6 +270,7 @@ class AudioServiceProvider extends ChangeNotifier {
       p.packString(audioFile.songUrl);
       p.packString(audioFile.songName);
       p.packString(audioFile.songAlbum);
+      p.packInt(audioFile.trackNumber);
       p.packString(audioFile.songArtist);
       p.packBinary(audioFile.coverPictureRaw);
     }
@@ -280,6 +290,7 @@ class AudioServiceProvider extends ChangeNotifier {
       String? sUrl = unpacker.unpackString();
       String? sName = unpacker.unpackString();
       String? sAlbum = unpacker.unpackString();
+      int? sTrackNumber = unpacker.unpackInt();
       String? sArtist = unpacker.unpackString();
       
       List<int>? sCoverPic = unpacker.unpackBinary();
@@ -288,9 +299,10 @@ class AudioServiceProvider extends ChangeNotifier {
         songUrl: sUrl ?? "", 
         songName: sName ?? "Unknown Song", 
         songAlbum: sAlbum ?? "Unknown Album", 
+        trackNumber: sTrackNumber ?? 0,
         songArtist: sArtist ?? "Unknown Artist", 
         coverPicture: sCoverPic.isEmpty ? null : Image.memory(Uint8List.fromList(sCoverPic)), 
-        coverPictureRaw: sCoverPic
+        coverPictureRaw: sCoverPic,
       );
 
       // Check if parent path of sUrl is present in urlEntries
@@ -315,6 +327,7 @@ class AudioServiceProvider extends ChangeNotifier {
             (album) => album.name == sAlbum,
           );
           album.trackCount++;
+          album.tracks.add(_library.songs[_library.songs.length - 1]);
         }
         else {
           _albums.add(
@@ -325,12 +338,33 @@ class AudioServiceProvider extends ChangeNotifier {
               coverImage: sCoverPic.isEmpty ? null : Image.memory(Uint8List.fromList(sCoverPic))
             )
           );
+          _albums[_albums.length - 1].tracks.add(_library.songs[_library.songs.length - 1]);
         }
       }
     }
 
+    for(AlbumModel album in _albums) {
+      album.tracks.sort((a, b) => a.trackNumber.compareTo(b.trackNumber));
+    }
+
     print("Read $songCount items from the cache.");
   }
+
+  // This method is used to decode track numbers of various types:
+  int decodeTrackNumber(String trackNumber) {
+    // Split the track number by '/' to handle formats like '5/12'
+    List<String> parts = trackNumber.split('/');
+
+    try {
+      // Parse the first part as an integer
+      return int.parse(parts[0].trim());
+    } catch (e) {
+      // Return 0 or an appropriate fallback if parsing fails
+      print("Error decoding track number: $e");
+      return 0;
+    }
+  }
+
 
   double getAudioMetadataLoadingProgress() { return _audioMetadataLoadingProgress; }
   AudioPlaylist getAudioLibrary() { return _library; }

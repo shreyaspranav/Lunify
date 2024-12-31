@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lunify/audio_service_provider.dart';
 import 'package:lunify/models/album_model.dart';
+import 'package:lunify/pages/album_page.dart';
 import 'package:lunify/theme_provider.dart';
 import 'package:marquee/marquee.dart';
 import 'package:provider/provider.dart';
@@ -145,7 +146,10 @@ class _AlbumTabState extends State<AlbumTab> {
                 ),
               ),
               onTap: () {
-                // On Album tap
+                Navigator.push(
+                  context, 
+                  MaterialPageRoute(builder: (_) => AlbumPage(album: _albums[index]))
+                );
               },
             );
           },

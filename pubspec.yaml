@@ -55,6 +55,7 @@ dev_dependencies:
   filesystem_picker: ^4.1.0
   messagepack: ^0.2.1
   marquee: ^2.3.0
+  palette_generator: ^0.3.3+5
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
