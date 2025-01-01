@@ -39,6 +39,7 @@ class _PlayerTabState extends State<PlayerTab> {
 
   double _playbackSpeed = 1.0;
   double _playbackPitch = 1.0;
+  final Color _transparentColor = Color.fromARGB(0, 0, 0, 0);
 
   List<Color> _songCoverTintPalette = [Color.fromARGB(0, 0, 0, 0), Color.fromARGB(0, 0, 0, 0)];
 
@@ -308,8 +309,8 @@ class _PlayerTabState extends State<PlayerTab> {
                 Provider.of<AudioServiceProvider>(context, listen: false).getAudioPlayer().seek(_songProgess);
               });
             },
-            thumbColor: _songCoverTintPalette[0],
-            activeColor: _songCoverTintPalette[1],
+            thumbColor: _songCoverTintPalette[0] == _transparentColor ? null : _songCoverTintPalette[0],
+            activeColor: _songCoverTintPalette[1] == _transparentColor ? null : _songCoverTintPalette[1],
           ),
 
           const SizedBox(
