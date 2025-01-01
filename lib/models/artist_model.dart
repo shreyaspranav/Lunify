@@ -4,7 +4,7 @@ import 'package:lunify/models/album_model.dart';
 class ArtistModel {
   String name;
   List<AlbumModel> albums;
-  Image? coverImage; // Cover Image of a album.
+  Widget? cover;
 
-  ArtistModel({required this.name, required this.albums, required this.coverImage});
+  ArtistModel({required this.name, required this.albums});
 }

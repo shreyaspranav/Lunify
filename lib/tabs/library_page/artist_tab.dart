@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:lunify/audio_service_provider.dart';
 import 'package:lunify/models/album_model.dart';
 import 'package:lunify/models/artist_model.dart';
+import 'package:lunify/pages/album_page.dart';
+import 'package:lunify/pages/artist_page.dart';
 import 'package:lunify/theme_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -43,8 +45,8 @@ class _ArtistTabState extends State<ArtistTab> {
                 width: 56, 
                 height: 80,
                 color: Provider.of<ThemeProvider>(context, listen: false).currentTheme == ThemeMode.light ? Colors.grey[300] : Colors.grey[850],
-                child: _artists[index].coverImage != null
-                    ? _artists[index].coverImage! // Display the coverImage
+                child: _artists[index].cover != null
+                    ? _artists[index].cover! // Display the coverImage
                     : Padding(
                       padding: const EdgeInsets.all(12.0),
                       child: Image.asset(
@@ -55,7 +57,11 @@ class _ArtistTabState extends State<ArtistTab> {
               ),
             ),
             onTap: () {
-              
+              print(_artists[index].cover == null);
+              Navigator.push(
+                context, 
+                MaterialPageRoute(builder: (_) => ArtistPage(artist: _artists[index],))
+              );
             },
           );
         },

@@ -198,7 +198,7 @@ class AudioServiceProvider extends ChangeNotifier {
           if(songMetadata != null) {
             Image? imageToAdd = null;
             if(ImageUtil.isValidImage(songMetadata.coverData ?? [])) {
-              imageToAdd = Image.memory(Uint8List.fromList(songMetadata.coverData ?? []));
+              imageToAdd = Image.memory(Uint8List.fromList(songMetadata.coverData ?? []), fit: BoxFit.cover);
             }
             _library.songs.add(
               SongModel(
@@ -252,16 +252,125 @@ class AudioServiceProvider extends ChangeNotifier {
           ArtistModel(
             name: album.artist, 
             albums: [album], 
-            coverImage: album.coverImage
           )
         );
       }
       else {
         ArtistModel artist = _artists.lastWhere((a) => a.name == album.artist);
         artist.albums.add(album);
+      }
+    }
+    
+    for(int i = 0; i < _artists.length; i++) {
+      ArtistModel artist = _artists[i];
+      print(artist.name);
+      List<Image> coverImages = [];
+      for(AlbumModel album in artist.albums) {
         if(album.coverImage != null) {
-          artist.coverImage = album.coverImage;
+          coverImages.add(album.coverImage!);
         }
+      }
+
+      if(coverImages.isEmpty) {
+        continue;
+      }
+      else if(coverImages.length == 1) {
+        artist.cover = coverImages[0];
+      }
+      else if(coverImages.length == 2) {
+        artist.cover = Row(
+          children: [
+            coverImages[0],
+            coverImages[1]
+          ],
+        );
+      }
+      else if(coverImages.length == 3) {
+        
+        List<int> idxs = [0, 1, 2];
+        idxs.shuffle();
+        int idx1 = idxs[0], idx2 = idxs[1]; 
+
+        artist.cover = Row(
+          children: [ // To clip properly.
+            Expanded(
+              child: ClipRect(
+                child: OverflowBox(
+                  alignment: Alignment.center,
+                  maxWidth: double.infinity,
+                  child: coverImages[idx1]
+                )
+              ),
+            ),
+            Expanded(
+              child: ClipRect(
+                child: OverflowBox(
+                  maxWidth: double.infinity,
+                  alignment: Alignment.center,
+                  child: coverImages[idx2]
+                )
+              ),
+            ),
+          ],
+        );
+      }
+      else {
+        List<int> idxs = List.generate(coverImages.length, (index) => index);
+        idxs.shuffle();
+        int idx1 = idxs[0], idx2 = idxs[1], idx3 = idxs[2], idx4 = idxs[3];
+
+        artist.cover = Row(
+          children: [
+            Flexible(
+              child: Column(
+                children: [
+                  Expanded(
+                    child: ClipRect(
+                      child: OverflowBox(
+                        maxWidth: double.infinity,
+                        alignment: Alignment.center,
+                        child: coverImages[idx1]
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: ClipRect(
+                      child: OverflowBox(
+                        maxWidth: double.infinity,
+                        alignment: Alignment.center,
+                        child: coverImages[idx2]
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Flexible(
+              child: Column(
+                children: [
+                  Expanded(
+                    child: ClipRect(
+                      child: OverflowBox(
+                        maxWidth: double.infinity,
+                        alignment: Alignment.center,
+                        child: coverImages[idx3]
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: ClipRect(
+                      child: OverflowBox(
+                        maxWidth: double.infinity,
+                        alignment: Alignment.center,
+                        child: coverImages[idx4]
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          ],
+        ); 
       }
     }
   }
@@ -314,7 +423,7 @@ class AudioServiceProvider extends ChangeNotifier {
         songAlbum: sAlbum ?? "Unknown Album", 
         trackNumber: sTrackNumber ?? 0,
         songArtist: sArtist ?? "Unknown Artist", 
-        coverPicture: sCoverPic.isEmpty ? null : Image.memory(Uint8List.fromList(sCoverPic)), 
+        coverPicture: sCoverPic.isEmpty ? null : Image.memory(Uint8List.fromList(sCoverPic), fit: BoxFit.cover), 
         coverPictureRaw: sCoverPic,
       );
 
@@ -348,7 +457,7 @@ class AudioServiceProvider extends ChangeNotifier {
               name: sAlbum ?? "Unknown Album", 
               artist: sArtist ?? "Unknown artist", 
               trackCount: 1,
-              coverImage: sCoverPic.isEmpty ? null : Image.memory(Uint8List.fromList(sCoverPic))
+              coverImage: sCoverPic.isEmpty ? null : Image.memory(Uint8List.fromList(sCoverPic), fit: BoxFit.cover)
             )
           );
           _albums[_albums.length - 1].tracks.add(_library.songs[_library.songs.length - 1]);
