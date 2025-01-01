@@ -9,6 +9,7 @@ import 'package:lunify/models/song_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:palette_generator/palette_generator.dart';
 
 class PlayerTab extends StatefulWidget {
   PlayerTab({super.key});
@@ -39,6 +40,8 @@ class _PlayerTabState extends State<PlayerTab> {
   double _playbackSpeed = 1.0;
   double _playbackPitch = 1.0;
 
+  List<Color> _songCoverTintPalette = [Color.fromARGB(0, 0, 0, 0), Color.fromARGB(0, 0, 0, 0)];
+
   String _convertDurationToString(Duration d) {
     // For now only deal with seconds, minutes and hours.
     int hours = d.inHours;
@@ -48,6 +51,15 @@ class _PlayerTabState extends State<PlayerTab> {
     return hours == 0 ? 
     "${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}" : 
     "$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}"; 
+  }
+
+  Future<List<Color>> _getPrimaryColor(Image? image) async {
+    if(image == null) {
+      return [const Color.fromARGB(0, 0, 0, 0), const Color.fromARGB(0, 0, 0, 0)];
+    }
+
+    final PaletteGenerator generator = await PaletteGenerator.fromImageProvider(image.image);
+    return [generator.colors.elementAt(0), generator.colors.elementAt(1)];
   }
 
   // Methods that modifies the state: ---------------------------------------------------------------------------
@@ -128,6 +140,13 @@ class _PlayerTabState extends State<PlayerTab> {
         });
       }
     });
+
+    var colors = _getPrimaryColor(_currentSongPlaying.coverPicture);
+    colors.then((c) {
+      setState(() {
+        _songCoverTintPalette = c;
+      });
+    });
   }
 
   // The build method: --------------------------------------------------------------------------------------------------
@@ -143,7 +162,9 @@ class _PlayerTabState extends State<PlayerTab> {
               left: 20,
               right: 20
             ),
-            child: coverPicture ?? const Placeholder()
+            child: Container(
+              child: coverPicture ?? const Placeholder(),
+            )
           ),
 
           Padding(
@@ -204,7 +225,9 @@ class _PlayerTabState extends State<PlayerTab> {
                                         Provider.of<AudioServiceProvider>(context, listen: false).setPlaybackPitch(v);
                                         setState(() {});
                                       });
-                                    }
+                                    },
+                                    thumbColor: _songCoverTintPalette[0],
+                                    activeColor: _songCoverTintPalette[1],
                                   )
                                 ],
                               )
@@ -214,9 +237,11 @@ class _PlayerTabState extends State<PlayerTab> {
                         );
                       });
                   }, 
-                  child: Text("S/P:${_playbackPitch.toStringAsFixed(2)}")
+                  child: Text(
+                    "S/P:${_playbackPitch.toStringAsFixed(2)}"
+                  )
                 ),
-                Spacer(),
+                const Spacer(),
                 IconButton(
                   onPressed: () {
                     setState(() {
@@ -282,7 +307,9 @@ class _PlayerTabState extends State<PlayerTab> {
                 _songProgess = Duration(seconds: val.toInt());
                 Provider.of<AudioServiceProvider>(context, listen: false).getAudioPlayer().seek(_songProgess);
               });
-            }
+            },
+            thumbColor: _songCoverTintPalette[0],
+            activeColor: _songCoverTintPalette[1],
           ),
 
           const SizedBox(

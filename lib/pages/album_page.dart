@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:lunify/audio_service_provider.dart';
 import 'package:lunify/models/album_model.dart';
+import 'package:lunify/models/song_model.dart';
 import 'package:lunify/theme_provider.dart';
 import 'package:lunify/widgets/song_list_view.dart';
 import 'package:provider/provider.dart';
@@ -21,6 +22,7 @@ class AlbumPage extends StatefulWidget {
 class _AlbumPageState extends State<AlbumPage> {
 
   Color _albumCoverPrimaryColor = Color.fromARGB(0, 0, 0, 0);
+  late SongModel _playingSong;
 
   Future<Color> _getPrimaryColor(Image? image) async {
     if(image == null) {
@@ -40,6 +42,10 @@ class _AlbumPageState extends State<AlbumPage> {
       setState(() {
         _albumCoverPrimaryColor = c;
       });
+    });
+
+    setState(() {
+      _playingSong = Provider.of<AudioServiceProvider>(context, listen: false).getCurrentSongPlaying();
     });
   }
 
@@ -153,11 +159,22 @@ class _AlbumPageState extends State<AlbumPage> {
                     child: Text('${index + 1}'),
                     backgroundColor: Color.fromRGBO(_albumCoverPrimaryColor.red, _albumCoverPrimaryColor.green, _albumCoverPrimaryColor.blue, 0.4),
                   ),
-                  title: Text(track.songName),
+                  title: Text(
+                    track.songName,
+                    style: TextStyle(
+                      fontWeight: _playingSong == widget.album.tracks[index] ?
+                        FontWeight.bold : FontWeight.normal, 
+                      color: _playingSong == widget.album.tracks[index] ? const Color(0xFF7E60BF) : 
+                        Provider.of<ThemeProvider>(context, listen: false).currentTheme == ThemeMode.light ? Colors.black : Colors.white
+                    ),
+                  ),
                   subtitle: Text(track.songArtist),
                   onTap: () {
                     // Handle track click (e.g., play song)
                     Provider.of<AudioServiceProvider>(context, listen: false).songClickedCallbackOnAlbum(widget.album, index);
+                    setState(() {
+                      _playingSong = widget.album.tracks[index];
+                    });
                     print("Selected Index: $index");
                   },
                 );
