@@ -37,7 +37,7 @@ class _ArtistTabState extends State<ArtistTab> {
               _artists[index].name,
               style: const TextStyle(fontSize: 16), // Adjusted font size
             ),
-            subtitle: Text("${_artists[index].albums.length} Albums"),
+            subtitle: Text("${_artists[index].albums.length} Album${_artists[index].albums.length != 1 ? 's' : ''}"),
             leading: ClipOval(
               child: Container(
                 width: 56, 
