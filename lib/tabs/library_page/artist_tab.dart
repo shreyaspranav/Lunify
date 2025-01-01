@@ -42,12 +42,15 @@ class _ArtistTabState extends State<ArtistTab> {
               child: Container(
                 width: 56, 
                 height: 80,
-                color: Provider.of<ThemeProvider>(context, listen: false).currentTheme == ThemeMode.light ? Colors.black12 : Colors.black54,
+                color: Provider.of<ThemeProvider>(context, listen: false).currentTheme == ThemeMode.light ? Colors.grey[300] : Colors.grey[850],
                 child: _artists[index].coverImage != null
                     ? _artists[index].coverImage! // Display the coverImage
                     : Padding(
                       padding: const EdgeInsets.all(12.0),
-                      child: Image.asset("assets/artist.png"),
+                      child: Image.asset(
+                        "assets/artist.png",
+                        color: Provider.of<ThemeProvider>(context, listen: false).currentTheme == ThemeMode.light ? Colors.black : Colors.white,
+                      ),
                     )
               ),
             ),
