@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:lunify/image_util.dart';
 import 'package:lunify/models/album_model.dart';
+import 'package:lunify/models/artist_model.dart';
 import 'package:lunify/models/song_model.dart';
 import 'package:audio_metadata_extractor/audio_metadata_extractor.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -47,6 +48,7 @@ class AudioServiceProvider extends ChangeNotifier {
 
   // Convinient list of albums. This will be filled when deserializing from cache or loading from disk.
   List<AlbumModel> _albums = [];
+  List<ArtistModel> _artists = [];
 
   bool _audioMetadataLoaded = false;
   bool _audioMetadataLoadingAsync = false;
@@ -151,6 +153,9 @@ class AudioServiceProvider extends ChangeNotifier {
 
       await deserializeAudioLibrary(unpacker, loadFromCacheEntries);
       await loadAudioMetadataFromDisk(onProgressCallback, loadFromDiskEntries);
+
+      organizeAlbumsAndArtists();
+      
       onProgressCallback(1.0);
     }
     serializeAudioLibrary();
@@ -234,12 +239,31 @@ class AudioServiceProvider extends ChangeNotifier {
       }
     }
 
+    return true;
+  }
+
+  void organizeAlbumsAndArtists() {
     // Sort all the songs in the albums according to the track number.
     for(AlbumModel album in _albums) {
       album.tracks.sort((a, b) => a.trackNumber.compareTo(b.trackNumber));
-    }
 
-    return true;
+      if(!_artists.any((artist) => artist.name == album.artist)) {
+        _artists.add(
+          ArtistModel(
+            name: album.artist, 
+            albums: [album], 
+            coverImage: album.coverImage
+          )
+        );
+      }
+      else {
+        ArtistModel artist = _artists.lastWhere((a) => a.name == album.artist);
+        artist.albums.add(album);
+        if(album.coverImage != null) {
+          artist.coverImage = album.coverImage;
+        }
+      }
+    }
   }
 
   Future<void> serializeAudioLibrary() async {
@@ -331,11 +355,6 @@ class AudioServiceProvider extends ChangeNotifier {
         }
       }
     }
-
-    for(AlbumModel album in _albums) {
-      album.tracks.sort((a, b) => a.trackNumber.compareTo(b.trackNumber));
-    }
-
     print("Read $songCount items from the cache.");
   }
 
@@ -358,6 +377,7 @@ class AudioServiceProvider extends ChangeNotifier {
   double getAudioMetadataLoadingProgress() { return _audioMetadataLoadingProgress; }
   AudioPlaylist getAudioLibrary() { return _library; }
   List<AlbumModel> getAlbums() { return _albums; }
+  List<ArtistModel> getArtists() { return _artists; }
 
   void addAudioLibraryUrl(String url) {
     _audioLibraryUrls.add(url);
