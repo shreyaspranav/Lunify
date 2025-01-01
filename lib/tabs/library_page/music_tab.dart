@@ -23,7 +23,13 @@ class _MusicTabState extends State<MusicTab> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SongListView(songsToDisplay: _audioServiceProvider.getAudioLibrary().songs, loading: widget.isLoading(), displayIndex: false),
+      body: SongListView(
+        songsToDisplay: _audioServiceProvider.getAudioLibrary().songs, 
+        loading: widget.isLoading(), 
+        displayIndex: false,
+        onTapFn: () {
+        },
+      ),
     );
   }
 }

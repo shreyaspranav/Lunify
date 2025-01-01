@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:lunify/audio_service_provider.dart';
 import 'package:lunify/models/album_model.dart';
 import 'package:lunify/theme_provider.dart';
 import 'package:lunify/widgets/song_list_view.dart';
@@ -156,6 +157,8 @@ class _AlbumPageState extends State<AlbumPage> {
                   subtitle: Text(track.songArtist),
                   onTap: () {
                     // Handle track click (e.g., play song)
+                    Provider.of<AudioServiceProvider>(context, listen: false).songClickedCallbackOnAlbum(widget.album, index);
+                    print("Selected Index: $index");
                   },
                 );
               },

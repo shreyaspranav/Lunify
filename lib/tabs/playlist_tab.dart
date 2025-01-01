@@ -55,7 +55,14 @@ class _PlaylistTabState extends State<PlaylistTab> {
             )
           )
         ) : 
-        SongListView(songsToDisplay: currentPlaylist.songs, loading: false)
+        SongListView(
+          songsToDisplay: currentPlaylist.songs, 
+          loading: false,
+          displayIndex: false,
+          onTapFn: () {
+
+          },
+        )
     );
   }
 }

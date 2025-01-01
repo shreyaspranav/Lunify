@@ -6,7 +6,7 @@ class AlbumModel {
   String artist;
   int trackCount;
   Image? coverImage;
-  List<SongModel> tracks = [];
+  List<SongModel> tracks = []; // This is sorted in track order.
 
   AlbumModel({
     required this.name,

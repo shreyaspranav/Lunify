@@ -8,8 +8,9 @@ class SongListView extends StatelessWidget {
   List<SongModel> songsToDisplay;
   bool loading;
   bool displayIndex;
+  Function onTapFn;
 
-  SongListView({required this.songsToDisplay, required this.loading, this.displayIndex = true});
+  SongListView({super.key, required this.songsToDisplay, required this.loading, required this.onTapFn, this.displayIndex = true});
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +52,8 @@ class SongListView extends StatelessWidget {
             ],
           ),
           onTap: () {
-            Provider.of<AudioServiceProvider>(context, listen: false).songClickedCallback(index);
+            onTapFn();
+            Provider.of<AudioServiceProvider>(context, listen: false).songClickedCallback(songsToDisplay[index]);
           },
         );
       }

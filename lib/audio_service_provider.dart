@@ -43,6 +43,7 @@ class AudioServiceProvider extends ChangeNotifier {
 
   AudioPlaylist _currentPlaylist = AudioPlaylist(playlistName: "Current Playlist");
   AudioPlaylist _library = AudioPlaylist(playlistName: "Library");  // Contains all the audio files that the device has to offer.
+  late ConcatenatingAudioSource _currentPlaylistAudioSource;
 
   // Convinient list of albums. This will be filled when deserializing from cache or loading from disk.
   List<AlbumModel> _albums = [];
@@ -75,6 +76,9 @@ class AudioServiceProvider extends ChangeNotifier {
     for (String url in additionalAudioLibraryUrls) {
       _audioLibraryUrls.add(url);
     }
+
+    _currentPlaylistAudioSource = ConcatenatingAudioSource(children: []);
+    _audioPlayer.setAudioSource(_currentPlaylistAudioSource, initialIndex: 0, initialPosition: Duration.zero);
   }
 
   SongModel getCurrentSongPlaying()             { return _currentSongPlaying; }
@@ -234,22 +238,7 @@ class AudioServiceProvider extends ChangeNotifier {
     for(AlbumModel album in _albums) {
       album.tracks.sort((a, b) => a.trackNumber.compareTo(b.trackNumber));
     }
-      
-    // TEMP
-    // _currentPlaylist = _library;
-    List<AudioSource> _currentPlaylistAudioSources = [];
-    for(SongModel song in _currentPlaylist.songs) {
-      _currentPlaylistAudioSources.add(AudioSource.uri(Uri.parse(song.songUrl)));
-    }
 
-    // Create the playlist in the "audio player"
-    final playlist = ConcatenatingAudioSource(
-      useLazyPreparation: false,
-      shuffleOrder: null,
-      children: _currentPlaylistAudioSources
-    );
-      
-    _audioPlayer.setAudioSource(playlist, initialIndex: 0, initialPosition: Duration.zero);
     return true;
   }
 
@@ -402,7 +391,63 @@ class AudioServiceProvider extends ChangeNotifier {
     _audioPlayer.setPitch(pitchFactor);
   }
 
-  void songClickedCallback(int indexInCurrentPlaylist) {
+  // A song is clicked in the album page. Either the user has clicked in the song itself, 
+  // or clicked the play button. Clicking on the play button will play the first song.
+  void songClickedCallbackOnAlbum(AlbumModel album, int index) async {
+    List<AudioSource> sources = [];
+    for(SongModel track in album.tracks) {
+      sources.add(AudioSource.file(track.songUrl));
+      print(track.songName);
+    }
+
+    // There are two ways to handle this.
+    //  One being when a user clicks on a song on an album, the songs in the current playlist gets destroyed and only the album songs will be included in the current playlist.
+    //  Another being appending the album songs.
+    // For the sake of simplicity, I am going on the first approach.
+
+    _currentPlaylistAudioSource.clear();
+    await _currentPlaylistAudioSource.addAll(sources);
+    
+    _currentPlaylist.songs.clear();
+    _currentPlaylist.songs.addAll(album.tracks);
+
+    if(_audioPlayer.playing) {
+      _audioPlayer.stop();
+    }
+
+    _audioPlayer.seek(Duration.zero, index: index);
+
+    _currentSongPlaying = album.tracks[index];
+    _audioPlayer.play();
+  }
+
+  // A single song is clicked. add this to the current playlist play the song.
+  // if the song is already present in the playlist, dont add this to the playlist.
+  void songClickedCallback(SongModel model) {
+    int idx = 0;
+    if(!_currentPlaylist.songs.contains(model)) {
+      AudioSource source = AudioSource.file(model.songUrl);
+      _currentPlaylistAudioSource.add(source);
+      _currentPlaylist.songs.add(model);
+
+      if(_audioPlayer.playing) {
+        _audioPlayer.stop();
+      }
+
+      idx = _currentPlaylist.songs.length - 1;
+    }
+    else {
+      idx = _currentPlaylist.songs.indexOf(model);
+    }
+
+    _audioPlayer.seek(Duration.zero, index: idx);
+    
+    _currentSongPlaying = model;
+    _audioPlayer.play();
+  }
+
+
+  void songClickedCallbackInPlaylist(int indexInCurrentPlaylist) {
     _currentSongPlayingIndexInCurrentPlaylist = indexInCurrentPlaylist;
     print("Song: $_currentSongPlayingIndexInCurrentPlaylist");
     _currentTabs.animateTo(_playerTabIndex);
