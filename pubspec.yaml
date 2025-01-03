@@ -72,6 +72,17 @@ flutter:
   assets:
      - assets/icon/icon.png
      - assets/artist.png
+     - assets/covers/1.jpg
+     - assets/covers/2.jpg
+     - assets/covers/3.jpg
+     - assets/covers/4.jpg
+     - assets/covers/5.jpg
+     - assets/covers/6.jpg
+     - assets/covers/7.jpg
+     - assets/covers/8.jpg
+     - assets/covers/9.jpg
+     - assets/covers/10.jpg
+     - assets/covers/11.jpg
 
 
   # An image asset can refer to one or more resolution-specific "variants", see

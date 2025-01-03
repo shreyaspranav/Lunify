@@ -56,6 +56,7 @@ class _AlbumPageState extends State<AlbumPage> {
         slivers: [
           SliverAppBar(
             expandedHeight: 350.0,
+            automaticallyImplyLeading: false,
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
               title: Container(

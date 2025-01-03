@@ -35,6 +35,7 @@ class AudioServiceProvider extends ChangeNotifier {
   // Maybe not cross platform friendly?
   List<String> _audioLibraryUrls = <String>["/storage/emulated/0/Music"];
   final String _audioCacheFileName = "audio_cache.bin";
+  final String _audioPlaylistDataFileName = "playlists.bin";
 
   // This audio player object is owned by this class
   final _audioPlayer = AudioPlayer();
@@ -68,6 +69,16 @@ class AudioServiceProvider extends ChangeNotifier {
     trackNumber: 0
   );
 
+  final SongModel _nullSong = SongModel(
+    songUrl: "", 
+    songName: "", 
+    songAlbum: "", 
+    songArtist: "", 
+    coverPicture: null,
+    coverPictureRaw: [],
+    trackNumber: 0
+  );
+
   int _currentSongPlayingIndexInCurrentPlaylist = 0;
 
   // The progress of loading the metadata of the songs. 0 represents 0% done, 1.0 repesents 100% done
@@ -88,9 +99,9 @@ class AudioServiceProvider extends ChangeNotifier {
 
   void setCurrentSongPlaying(SongModel model)   { _currentSongPlaying = model; notifyListeners(); }
 
-  Future<String> getCacheEntryPath() async {
+  Future<String> getCacheEntryPath(String cacheFileName) async {
     final Directory? directory = await getExternalStorageDirectory();
-    final String cacheFilePath = "${directory!.path}/$_audioCacheFileName";
+    final String cacheFilePath = "${directory!.path}/$cacheFileName";
 
     return cacheFilePath;
   }
@@ -110,7 +121,7 @@ class AudioServiceProvider extends ChangeNotifier {
     bool returnValue = false;
 
     // Check if the cache exists:
-    File audioCacheFile = File(await getCacheEntryPath());
+    File audioCacheFile = File(await getCacheEntryPath(_audioCacheFileName));
     bool cacheFileExists = await audioCacheFile.exists();
 
     if(!cacheFileExists) {
@@ -119,7 +130,7 @@ class AudioServiceProvider extends ChangeNotifier {
     else {
       returnValue = true; // WTF??.
 
-      File cacheFile = File(await getCacheEntryPath());
+      File cacheFile = File(await getCacheEntryPath(_audioCacheFileName));
       Uint8List cacheBytes = await cacheFile.readAsBytes();
 
       Unpacker unpacker = Unpacker(cacheBytes);
@@ -397,7 +408,7 @@ class AudioServiceProvider extends ChangeNotifier {
       p.packBinary(audioFile.coverPictureRaw);
     }
     
-    File cacheFile = File(await getCacheEntryPath());
+    File cacheFile = File(await getCacheEntryPath(_audioCacheFileName));
     await cacheFile.writeAsBytes(p.takeBytes());
   }
 
@@ -482,11 +493,72 @@ class AudioServiceProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> serializePlaylists() async {
+    File serializedFile = File(await getCacheEntryPath(_audioPlaylistDataFileName));
+    Packer packer = Packer();
 
-  double getAudioMetadataLoadingProgress() { return _audioMetadataLoadingProgress; }
-  AudioPlaylist getAudioLibrary() { return _library; }
-  List<AlbumModel> getAlbums() { return _albums; }
-  List<ArtistModel> getArtists() { return _artists; }
+    packer.packInt(_playlists.length);
+    for(AudioPlaylist playlist in _playlists) {
+      packer.packString(playlist.playlistName);
+      packer.packInt(playlist.songs.length);
+
+      for(SongModel song in playlist.songs) {
+        packer.packString(song.songUrl);
+      }
+    }
+
+    serializedFile.writeAsBytes(packer.takeBytes());
+  }
+
+  Future<void> deserializePlaylists() async {
+    File deserializedFile = File(await getCacheEntryPath(_audioPlaylistDataFileName));
+    if(!deserializedFile.existsSync()) return;
+
+    _playlists.clear();
+
+    Uint8List cacheBytes = await deserializedFile.readAsBytes();
+
+    Unpacker unpacker = Unpacker(cacheBytes);
+
+    int playlistCount = unpacker.unpackInt()!;
+    for(int i = 0; i < playlistCount; i++) {
+      
+      String name = unpacker.unpackString()!;
+      _playlists.add(AudioPlaylist(playlistName: name));
+
+      int trackCount = unpacker.unpackInt()!;
+
+      for(int i = 0; i < trackCount; i++) {
+        String songUrl = unpacker.unpackString()!;
+
+        SongModel song = _library.songs.lastWhere((songModel) => songModel.songUrl == songUrl, orElse: () => _nullSong);
+        if(song != _nullSong) _playlists.last.songs.add(song);
+      }
+    }
+  }
+
+  double getAudioMetadataLoadingProgress()   { return _audioMetadataLoadingProgress; }
+  AudioPlaylist getAudioLibrary()            { return _library; }
+  List<AlbumModel> getAlbums()               { return _albums; }
+  List<ArtistModel> getArtists()             { return _artists; }
+  List<AudioPlaylist> getPlaylists()         { return _playlists; }
+
+  void addPlaylist(AudioPlaylist playlist) {
+    _playlists.add(playlist);
+  }
+
+  void deletePlaylist(AudioPlaylist playlist) {
+    _playlists.remove(playlist);
+  }
+
+  AudioPlaylist? getPlaylist(String name) {
+    if(_playlists.any((playlist) => playlist.playlistName != name)) {
+      return null;
+    }
+    else {
+      return _playlists.lastWhere((playlist) => playlist.playlistName == name);
+    }
+  }
 
   void addAudioLibraryUrl(String url) {
     _audioLibraryUrls.add(url);
