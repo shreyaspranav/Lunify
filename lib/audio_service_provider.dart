@@ -628,10 +628,10 @@ class AudioServiceProvider extends ChangeNotifier {
     //  Another being appending the album songs.
     // For the sake of simplicity, I am going on the first approach.
 
-    int prevCount = 0;
+    int prevCount = _currentPlaylist.songs.length;
 
     if(!append){
-      prevCount = _currentPlaylist.songs.length;
+      prevCount = 0;
       _currentPlaylistAudioSource.clear();
     }
     await _currentPlaylistAudioSource.addAll(sources);

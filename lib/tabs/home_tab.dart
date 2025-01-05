@@ -287,7 +287,7 @@ class _HomeTabState extends State<HomeTab> with TickerProviderStateMixin {
                         playlist: _playlists[index])));
                       },
                       onBottomIconTap: () {
-                        // When the user taps the play button on the bottom
+                        Provider.of<AudioServiceProvider>(context, listen: false).playSongs(_playlists[index].songs, 0);
                       },
                       onOptionsTap: () {
                         // When the user taps the options button
