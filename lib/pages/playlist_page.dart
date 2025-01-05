@@ -126,35 +126,11 @@ class _PlaylistPageState extends State<PlaylistPage> {
           ),
           // SliverList for song tracks
           SliverToBoxAdapter(
-            child: ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: widget.playlist.songs.length,
-              itemBuilder: (context, index) {
-                return ListTile(
-                  title: Text(
-                    widget.playlist.songs[index].songName,
-                    style: TextStyle(
-                      fontWeight: _highlightedSong == widget.playlist.songs[index] ?
-                        FontWeight.bold : FontWeight.normal, 
-                      color: _highlightedSong == widget.playlist.songs[index] ? const Color(0xFF7E60BF) : 
-                        Provider.of<ThemeProvider>(context, listen: false).currentTheme == ThemeMode.light ? Colors.black : Colors.white
-                    ), 
-                  ),
-                  subtitle: Text(widget.playlist.songs[index].songArtist),
-                  leading:  widget.playlist.songs[index].coverPicture ?? 
-                    const Icon(
-                      Icons.music_note_outlined,
-                      size: 55,
-                    ),
-                  onTap: () {
-                    Provider.of<AudioServiceProvider>(context, listen: false).songClickedCallback(widget.playlist.songs[index]);
-                    setState(() {
-                      _highlightedSong = widget.playlist.songs[index];
-                    });
-                  },
-                );
-              },
+            child: SongListView(
+              songsToDisplay: widget.playlist.songs, 
+              loading: false,
+              displayIndex: false,
+              optionButtonTapFunction: OptionButtonTapFunction.OptionsInPlaylistContext
             ),
           )
         ],

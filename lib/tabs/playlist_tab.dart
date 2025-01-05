@@ -59,9 +59,7 @@ class _PlaylistTabState extends State<PlaylistTab> {
           songsToDisplay: currentPlaylist.songs, 
           loading: false,
           displayIndex: false,
-          onTapFn: () {
-
-          },
+          optionButtonTapFunction: OptionButtonTapFunction.OptionsInPlaylistContext
         )
     );
   }

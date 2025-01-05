@@ -13,7 +13,7 @@ class HomeTab extends StatefulWidget {
   State<HomeTab> createState() => _HomeTabState();
 }
 
-class _HomeTabState extends State<HomeTab> with TickerProviderStateMixin{
+class _HomeTabState extends State<HomeTab> with TickerProviderStateMixin {
   
   List<AudioPlaylist> _playlists = [];
   final List<int> _coverIndices = [1, 5, 6, 7, 8, 9, 10, 11];
@@ -27,12 +27,11 @@ class _HomeTabState extends State<HomeTab> with TickerProviderStateMixin{
   }
 
   Future<void> initPlaylists() async {
+    // In order for the deserializePlaylists() to work, the app has to load the entire library first.
     await Provider.of<AudioServiceProvider>(context, listen: false).deserializePlaylists();
     setState(() {
       _playlists = Provider.of<AudioServiceProvider>(context, listen: false).getPlaylists();
     });
-
-    print(_playlists.length);
   }
 
   void _showCreatePlaylistDialog() {
@@ -68,7 +67,16 @@ class _HomeTabState extends State<HomeTab> with TickerProviderStateMixin{
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      title: const Text("Create New Playlist"),
+                      title: Row(
+                        children: [
+                          Icon(
+                            Icons.playlist_play_rounded,
+                            size: 35,
+                            color: colorPalette[Provider.of<ThemeProvider>(context, listen: false).currentTheme == ThemeMode.light ? 2 : 3],
+                          ),
+                          const Text("Create New Playlist"),
+                        ],
+                      ),
                       content: Column(
                         children: [
                           SizedBox(

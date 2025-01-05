@@ -170,6 +170,9 @@ class AudioServiceProvider extends ChangeNotifier {
       onProgressCallback(1.0);
     }
     serializeAudioLibrary();
+
+    // Also load the playlists. Because the playlists can only be loaded if the audio libarary is loaded.
+    await deserializePlaylists();
     
     _audioMetadataLoaded = true;
 
@@ -274,7 +277,6 @@ class AudioServiceProvider extends ChangeNotifier {
     
     for(int i = 0; i < _artists.length; i++) {
       ArtistModel artist = _artists[i];
-      print(artist.name);
       List<Image> coverImages = [];
       for(AlbumModel album in artist.albums) {
         if(album.coverImage != null) {
@@ -381,7 +383,7 @@ class AudioServiceProvider extends ChangeNotifier {
               ),
             )
           ],
-        ); 
+        );
       }
     }
   }
@@ -531,6 +533,8 @@ class AudioServiceProvider extends ChangeNotifier {
       for(int i = 0; i < trackCount; i++) {
         String songUrl = unpacker.unpackString()!;
 
+
+
         SongModel song = _library.songs.lastWhere((songModel) => songModel.songUrl == songUrl, orElse: () => _nullSong);
         if(song != _nullSong) _playlists.last.songs.add(song);
       }
@@ -542,6 +546,22 @@ class AudioServiceProvider extends ChangeNotifier {
   List<AlbumModel> getAlbums()               { return _albums; }
   List<ArtistModel> getArtists()             { return _artists; }
   List<AudioPlaylist> getPlaylists()         { return _playlists; }
+
+  void addSongToPlaylist(AudioPlaylist playlist, SongModel song) {
+    if(_playlists.contains(playlist)) {
+      _playlists.firstWhere((p) => p == playlist).songs.add(song);
+    }
+  }
+
+  void addToCurrentQueue(SongModel song) {
+    if(!_currentPlaylist.songs.contains(song)) {
+      _currentPlaylist.songs.add(song);
+    }
+  }
+
+  void deleteFromCurrentQueue(SongModel song) {
+    _currentPlaylist.songs.remove(song);
+  }
 
   void addPlaylist(AudioPlaylist playlist) {
     _playlists.add(playlist);
@@ -622,6 +642,35 @@ class AudioServiceProvider extends ChangeNotifier {
     _audioPlayer.play();
   }
 
+  // The same but for playlists.
+  void songClickedCallbackOnPlaylist(AudioPlaylist playlist, int index) async {
+    List<AudioSource> sources = [];
+    for(SongModel track in playlist.songs) {
+      sources.add(AudioSource.file(track.songUrl));
+      print(track.songName);
+    }
+
+    // There are two ways to handle this.
+    //  One being when a user clicks on a song on an album, the songs in the current playlist gets destroyed and only the album songs will be included in the current playlist.
+    //  Another being appending the album songs.
+    // For the sake of simplicity, I am going on the first approach.
+
+    _currentPlaylistAudioSource.clear();
+    await _currentPlaylistAudioSource.addAll(sources);
+    
+    _currentPlaylist.songs.clear();
+    _currentPlaylist.songs.addAll(playlist.songs);
+
+    if(_audioPlayer.playing) {
+      _audioPlayer.stop();
+    }
+
+    _audioPlayer.seek(Duration.zero, index: index);
+
+    _currentSongPlaying = playlist.songs[index];
+    _audioPlayer.play();
+  }
+
   // A single song is clicked. add this to the current playlist play the song.
   // if the song is already present in the playlist, dont add this to the playlist.
   void songClickedCallback(SongModel model) {
@@ -648,14 +697,14 @@ class AudioServiceProvider extends ChangeNotifier {
   }
 
 
-  void songClickedCallbackInPlaylist(int indexInCurrentPlaylist) {
-    _currentSongPlayingIndexInCurrentPlaylist = indexInCurrentPlaylist;
-    print("Song: $_currentSongPlayingIndexInCurrentPlaylist");
-    _currentTabs.animateTo(_playerTabIndex);
-    _currentSongPlaying = _currentPlaylist.songs[indexInCurrentPlaylist];
-    _audioPlayer.seek(Duration.zero, index: _currentSongPlayingIndexInCurrentPlaylist);
-    _audioPlayer.play();
-  }
+  // void songClickedCallbackInPlaylist(int indexInCurrentPlaylist) {
+  //   _currentSongPlayingIndexInCurrentPlaylist = indexInCurrentPlaylist;
+  //   print("Song: $_currentSongPlayingIndexInCurrentPlaylist");
+  //   _currentTabs.animateTo(_playerTabIndex);
+  //   _currentSongPlaying = _currentPlaylist.songs[indexInCurrentPlaylist];
+  //   _audioPlayer.seek(Duration.zero, index: _currentSongPlayingIndexInCurrentPlaylist);
+  //   _audioPlayer.play();
+  // }
 
   void previousSong() {
     if (_currentSongPlayingIndexInCurrentPlaylist > -1) {

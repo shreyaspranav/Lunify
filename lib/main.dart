@@ -73,6 +73,10 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
 
     Provider.of<AudioServiceProvider>(context, listen: false).setTabController(_tabController);
     Provider.of<AudioServiceProvider>(context, listen: false).setPlayerTabIndex(1);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<AudioServiceProvider>(context, listen: false).loadAudioMetadata((p) {});
+    });
   }
 
   void showLoadingDialog(BuildContext context) {

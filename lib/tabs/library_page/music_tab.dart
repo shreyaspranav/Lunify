@@ -17,6 +17,7 @@ class _MusicTabState extends State<MusicTab> {
   late AudioServiceProvider _audioServiceProvider;
 
   void initState() {
+    super.initState();
     _audioServiceProvider = Provider.of<AudioServiceProvider>(context, listen: false);
   }
 
@@ -27,8 +28,7 @@ class _MusicTabState extends State<MusicTab> {
         songsToDisplay: _audioServiceProvider.getAudioLibrary().songs, 
         loading: widget.isLoading(), 
         displayIndex: false,
-        onTapFn: () {
-        },
+        optionButtonTapFunction: OptionButtonTapFunction.OptionsInSongsContext
       ),
     );
   }

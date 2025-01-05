@@ -33,7 +33,7 @@ class _LibraryTabState extends State<LibraryTab> with SingleTickerProviderStateM
           if(_audioMetadataLoadingProgress == 1.0) {
               _isAudioMetadataLoading = false;
           }
-        });  
+        });
       }
     });
 
@@ -53,7 +53,7 @@ class _LibraryTabState extends State<LibraryTab> with SingleTickerProviderStateM
     _tabController = TabController.new(length: 3, vsync: this);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadAudioMetadata();
+      // _loadAudioMetadata();
     });
   }
 
