@@ -105,27 +105,14 @@ class _PlayerTabState extends State<PlayerTab> {
     _songDuration = Provider.of<AudioServiceProvider>(context, listen: false).getAudioPlayer().duration ?? Durations.extralong4;
     _paused = !Provider.of<AudioServiceProvider>(context, listen: false).getAudioPlayer().playerState.playing;
 
-    _currentSongPlaying = Provider.of<AudioServiceProvider>(context, listen: false).getCurrentSongPlaying();
     _playbackSpeed = Provider.of<AudioServiceProvider>(context, listen: false).getAudioPlayer().speed;
     
     // For now, let playback speed and pitch be the same(this offers best audio quality)
     // There is only one slider thats sets both the speed and pitch 
     _playbackPitch = _playbackSpeed;
 
-    // Set it cover everything:
-    // This fixed the image flickering issues
-    coverPicture = _currentSongPlaying.coverPicture ?? 
-      const Padding(
-        padding: EdgeInsets.only(
-          top: 20,
-          bottom: 20
-        ),
-        child: Icon(
-          Icons.music_note_outlined,
-          size: 300,
-        ),
-      );
-              
+    initCurrentSong();
+    
     Provider.of<AudioServiceProvider>(context, listen: false).getAudioPlayer().positionStream.listen((position) {
       if(mounted) {
         setState(() {
@@ -148,6 +135,43 @@ class _PlayerTabState extends State<PlayerTab> {
         _songCoverTintPalette = c;
       });
     });
+
+    Provider.of<AudioServiceProvider>(context, listen: false).getAudioPlayer().sequenceStateStream.listen((sequenceState) {
+      if (sequenceState != null) {
+        if (mounted) {
+          setState(() {
+            final _audioPlayer = Provider.of<AudioServiceProvider>(context, listen: false);
+            _audioPlayer.setCurrentSongPlaying(_audioPlayer.getCurrentPlaylist().songs[sequenceState.currentIndex]);
+            initCurrentSong();
+          });
+        }
+      }
+    });
+  }
+
+  void initCurrentSong() {
+    _currentSongPlaying = Provider.of<AudioServiceProvider>(context, listen: false).getCurrentSongPlaying();
+    
+    // Set it cover everything:
+    // This fixed the image flickering issues
+    coverPicture = _currentSongPlaying.coverPicture ?? 
+      const Padding(
+        padding: EdgeInsets.only(
+          top: 20,
+          bottom: 20
+        ),
+        child: Icon(
+          Icons.music_note_outlined,
+          size: 300,
+        ),
+      ); 
+
+    var colors = _getPrimaryColor(_currentSongPlaying.coverPicture);
+    colors.then((c) {
+      setState(() {
+        _songCoverTintPalette = c;
+      });
+    });      
   }
 
   // The build method: --------------------------------------------------------------------------------------------------
@@ -329,8 +353,8 @@ class _PlayerTabState extends State<PlayerTab> {
                   icon: getCurrentRepeatIcon()
                 ),
                 IconButton(
-                  onPressed: () {
-                    Provider.of<AudioServiceProvider>(context, listen: false).previousSong();
+                  onPressed: () async {
+                    await Provider.of<AudioServiceProvider>(context, listen: false).previousSong();
                     setState(() {
                       _currentSongPlaying = Provider.of<AudioServiceProvider>(context, listen: false).getCurrentSongPlaying();
                       coverPicture = _currentSongPlaying.coverPicture ?? 
@@ -354,8 +378,8 @@ class _PlayerTabState extends State<PlayerTab> {
                   iconSize: 50,
                 ),
                 IconButton(
-                  onPressed: () {
-                    Provider.of<AudioServiceProvider>(context, listen: false).nextSong();
+                  onPressed: () async {
+                    await Provider.of<AudioServiceProvider>(context, listen: false).nextSong();
                     setState(() {
                       _currentSongPlaying = Provider.of<AudioServiceProvider>(context, listen: false).getCurrentSongPlaying();
                       coverPicture = _currentSongPlaying.coverPicture ?? 

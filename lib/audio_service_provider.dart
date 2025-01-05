@@ -683,25 +683,19 @@ class AudioServiceProvider extends ChangeNotifier {
   //   _audioPlayer.play();
   // }
 
-  void previousSong() {
-    if (_currentSongPlayingIndexInCurrentPlaylist > -1) {
-      _audioPlayer.seekToPrevious();
-      _currentSongPlaying = _currentPlaylist.songs[
-        _currentSongPlayingIndexInCurrentPlaylist == 0 ? 
-        0 :
-        --_currentSongPlayingIndexInCurrentPlaylist 
-      ];
+  Future<void> previousSong() async {
+    await _audioPlayer.seekToPrevious();
+
+    if(_audioPlayer.currentIndex != null) {
+      _currentSongPlaying = _currentPlaylist.songs[_audioPlayer.currentIndex!];
     }
   }
 
-  void nextSong() {    
-    if (_currentSongPlayingIndexInCurrentPlaylist < _currentPlaylist.songs.length) {
-      _audioPlayer.seekToNext();
-      _currentSongPlaying = _currentPlaylist.songs[
-        _currentSongPlayingIndexInCurrentPlaylist == _currentPlaylist.songs.length - 1 ? 
-        _currentPlaylist.songs.length - 1 :
-        ++_currentSongPlayingIndexInCurrentPlaylist
-      ];
+  Future<void> nextSong() async {    
+    await _audioPlayer.seekToNext();
+
+    if(_audioPlayer.currentIndex != null) {
+      _currentSongPlaying = _currentPlaylist.songs[_audioPlayer.currentIndex!];
     }
   }
 }
