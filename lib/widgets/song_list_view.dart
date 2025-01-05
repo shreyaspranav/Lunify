@@ -17,9 +17,9 @@ class SongListView extends StatefulWidget {
   bool displayIndex;
   bool scrollable;
   DisplayContext displayContext;
+  AudioPlaylist? playlist;
 
-
-  SongListView({super.key, required this.songsToDisplay, required this.loading, required this.displayContext, this.displayIndex = true, this.scrollable = true});
+  SongListView({super.key, required this.songsToDisplay, required this.loading, required this.displayContext, this.displayIndex = true, this.scrollable = true, this.playlist});
 
   @override
   State<SongListView> createState() => _SongListViewState();
@@ -72,12 +72,16 @@ class _SongListViewState extends State<SongListView> with TickerProviderStateMix
             icon: const Icon(Icons.more_vert), 
             onPressed: () {
               switch (widget.displayContext) {
+                case DisplayContext.currentPlayingQueueContext:
+                  _showOptionsInCurrentPlayingQueueContext(context, widget.songsToDisplay[index]);
+                  break;
                 case DisplayContext.playlistContext:
+                  _showOptionsInPlaylistContext(context, widget.playlist!, widget.songsToDisplay[index]);
                   break;
                 case DisplayContext.songsContext:
+                case DisplayContext.artistsContext:
                   _showOptionsInSongsContext(context, widget.songsToDisplay[index]);
                   break;
-                
                 default:
               }
             }
@@ -205,7 +209,7 @@ class _SongListViewState extends State<SongListView> with TickerProviderStateMix
                       ),
                       title: const Text("Add to the Playing Queue"),
                       onTap: () {
-                        Provider.of<AudioServiceProvider>(context, listen: false).addToCurrentQueue(song);
+                        Provider.of<AudioServiceProvider>(context, listen: false).appendSongInQueueAndPlay(song, play: false);
                         Navigator.pop(context);
                       },
                     ),
@@ -321,7 +325,204 @@ class _SongListViewState extends State<SongListView> with TickerProviderStateMix
       }
     );
   }
-  void _showOptionsInPlaylistContext(SongModel song) {
-    
+
+  void _showOptionsInPlaylistContext(BuildContext context, AudioPlaylist playlist, SongModel song) {
+    showModalBottomSheet(
+      context: context, 
+      builder: (context) {
+        return FractionallySizedBox(
+          widthFactor: 1,
+          heightFactor: 0.45,
+
+          child: Padding(
+            padding: const EdgeInsets.only(
+              left: 15,
+              right: 10,
+              top: 15
+            ),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(
+                    bottom: 10,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: 70,
+                        height: 70,
+                        child: ClipRRect(
+                          borderRadius: const BorderRadius.all(Radius.circular(10)),
+                          child: song.coverPicture ?? const Icon(Icons.music_note),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(
+                          left: 15
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              song.songName,
+                              style: const TextStyle(
+                                fontSize: 20
+                              ),
+                            ),
+                            Text(
+                              song.songArtist,
+                              style: const TextStyle(
+                                fontSize: 15
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1),
+                SizedBox(
+                  height: 5,
+                ),
+                ListView(
+                  physics: const NeverScrollableScrollPhysics(),
+                  shrinkWrap: true,
+                  children: [
+                    ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 6
+                      ),
+                      leading: Icon(
+                        Icons.queue_music_rounded,
+                        color: colorPalette[Provider.of<ThemeProvider>(context, listen: false).currentTheme == ThemeMode.light ? 2 : 3],
+                        size: 40,
+                      ),
+                      title: const Text("Add to the Playing Queue"),
+                      onTap: () {
+                        Provider.of<AudioServiceProvider>(context, listen: false).appendSongInQueueAndPlay(song, play: false);
+                        Navigator.pop(context);
+                      },
+                    ),
+                    ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 6
+                      ),
+                      leading: Icon(
+                        Icons.playlist_remove_rounded,
+                        color: colorPalette[Provider.of<ThemeProvider>(context, listen: false).currentTheme == ThemeMode.light ? 2 : 3],
+                        size: 40,
+                      ),
+                      title: Text("Delete From Playlist"),
+                      onTap: () {
+                        setState(() {
+                          Provider.of<AudioServiceProvider>(context, listen: false).deleteSongFromPlaylist(playlist, song);
+                          Provider.of<AudioServiceProvider>(context, listen: false).serializePlaylists();
+                        });
+                        Navigator.pop(context);
+                        
+                      },
+                    ),
+                  ],
+                )
+              ],
+            ),
+          ),
+        );
+      }
+    );
+  }
+
+  void _showOptionsInCurrentPlayingQueueContext(BuildContext context, SongModel song) {
+    showModalBottomSheet(
+      context: context, 
+      builder: (context) {
+        return FractionallySizedBox(
+          widthFactor: 1,
+          heightFactor: 0.34,
+
+          child: Padding(
+            padding: const EdgeInsets.only(
+              left: 15,
+              right: 10,
+              top: 15
+            ),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(
+                    bottom: 10,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: 70,
+                        height: 70,
+                        child: ClipRRect(
+                          borderRadius: const BorderRadius.all(Radius.circular(10)),
+                          child: song.coverPicture ?? const Icon(Icons.music_note),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(
+                          left: 15
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              song.songName,
+                              style: const TextStyle(
+                                fontSize: 20
+                              ),
+                            ),
+                            Text(
+                              song.songArtist,
+                              style: const TextStyle(
+                                fontSize: 15
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1),
+                SizedBox(
+                  height: 5,
+                ),
+                ListView(
+                  physics: const NeverScrollableScrollPhysics(),
+                  shrinkWrap: true,
+                  children: [
+                    ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 6
+                      ),
+                      leading: Icon(
+                        Icons.playlist_remove_rounded,
+                        color: colorPalette[Provider.of<ThemeProvider>(context, listen: false).currentTheme == ThemeMode.light ? 2 : 3],
+                        size: 40,
+                      ),
+                      title: Text("Delete From Playing Queue"),
+                      onTap: () {
+                        setState(() {
+                          Provider.of<AudioServiceProvider>(context, listen: false).deleteFromCurrentQueue(song);
+                        });
+                        Navigator.pop(context);
+                        
+                      },
+                    ),
+                  ],
+                )
+              ],
+            ),
+          ),
+        );
+      }
+    );
   }
 }

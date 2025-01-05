@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:lunify/audio_service_provider.dart';
+import 'package:lunify/models/song_model.dart';
 import 'package:lunify/pages/library_page.dart';
 import 'package:lunify/pages/playlist_page.dart';
 import 'package:lunify/theme_provider.dart';
@@ -352,7 +353,8 @@ class _HomeTabState extends State<HomeTab> with TickerProviderStateMixin {
                                           ),
                                           title: const Text("Play"),
                                           onTap: () {
-                                            
+                                            Provider.of<AudioServiceProvider>(context, listen: false).playSongs(_playlists[index].songs, 0);
+                                            Navigator.pop(context);
                                           },
                                         ),
                                         ListTile(
@@ -366,7 +368,10 @@ class _HomeTabState extends State<HomeTab> with TickerProviderStateMixin {
                                           ),
                                           title: const Text("Add to the Playing Queue"),
                                           onTap: () {
-                                            
+                                            for(SongModel song in _playlists[index].songs) {
+                                              Provider.of<AudioServiceProvider>(context, listen: false).appendSongInQueueAndPlay(song, play: false);
+                                            }
+                                            Navigator.pop(context);
                                           },
                                         )
                                       ],

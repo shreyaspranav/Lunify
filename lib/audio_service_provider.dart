@@ -548,19 +548,22 @@ class AudioServiceProvider extends ChangeNotifier {
   List<AudioPlaylist> getPlaylists()         { return _playlists; }
 
   void addSongToPlaylist(AudioPlaylist playlist, SongModel song) {
-    if(_playlists.contains(playlist)) {
+    if(_playlists.contains(playlist) && !playlist.songs.contains(song)) {
       _playlists.firstWhere((p) => p == playlist).songs.add(song);
     }
   }
 
-  void addToCurrentQueue(SongModel song) {
-    if(!_currentPlaylist.songs.contains(song)) {
-      _currentPlaylist.songs.add(song);
+  void deleteSongFromPlaylist(AudioPlaylist playlist, SongModel song) {
+    if(_playlists.contains(playlist) && playlist.songs.contains(song)) {
+      playlist.songs.remove(song);
     }
   }
 
   void deleteFromCurrentQueue(SongModel song) {
+    int idx = _currentPlaylist.songs.indexOf(song);
+
     _currentPlaylist.songs.remove(song);
+    _currentPlaylistAudioSource.removeAt(idx);
   }
 
   void addPlaylist(AudioPlaylist playlist) {
@@ -625,17 +628,25 @@ class AudioServiceProvider extends ChangeNotifier {
     //  Another being appending the album songs.
     // For the sake of simplicity, I am going on the first approach.
 
-    _currentPlaylistAudioSource.clear();
+    int prevCount = 0;
+
+    if(!append){
+      prevCount = _currentPlaylist.songs.length;
+      _currentPlaylistAudioSource.clear();
+    }
     await _currentPlaylistAudioSource.addAll(sources);
     
-    _currentPlaylist.songs.clear();
+    if(!append) {
+      _currentPlaylist.songs.clear();
+    }
+
     _currentPlaylist.songs.addAll(songs);
 
     if(_audioPlayer.playing) {
       _audioPlayer.stop();
     }
 
-    playSongWithinQueue(playIndex);
+    playSongWithinQueue(prevCount + playIndex);
   }
 
   void playSongWithinQueue(int index) {
@@ -650,7 +661,7 @@ class AudioServiceProvider extends ChangeNotifier {
 
   // A single song is clicked. add this to the current playlist play the song.
   // if the song is already present in the playlist, dont add this to the playlist.
-  void appendSongInQueueAndPlay(SongModel model) {
+  void appendSongInQueueAndPlay(SongModel model, {bool play = true}) {
     int idx = 0;
     if(!_currentPlaylist.songs.contains(model)) {
       AudioSource source = AudioSource.file(model.songUrl);
@@ -664,13 +675,17 @@ class AudioServiceProvider extends ChangeNotifier {
       idx = _currentPlaylist.songs.length - 1;
     }
     else {
-      idx = _currentPlaylist.songs.indexOf(model);
+      if(play) {
+        idx = _currentPlaylist.songs.indexOf(model);
+      }
     }
 
-    _audioPlayer.seek(Duration.zero, index: idx);
+    if(play) {
+      _audioPlayer.seek(Duration.zero, index: idx);
     
-    _currentSongPlaying = model;
-    _audioPlayer.play();
+      _currentSongPlaying = model;
+      _audioPlayer.play();
+    }
   }
 
 

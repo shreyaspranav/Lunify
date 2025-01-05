@@ -132,6 +132,7 @@ class _PlaylistPageState extends State<PlaylistPage> {
               displayIndex: false,
               scrollable: false,
               displayContext: DisplayContext.playlistContext,
+              playlist: widget.playlist,
             ),
           )
         ],
