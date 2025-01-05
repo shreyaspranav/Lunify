@@ -190,7 +190,10 @@ class _PlayerTabState extends State<PlayerTab> {
               right: 20
             ),
             child: Container(
-              child: coverPicture ?? const Placeholder(),
+              child: SizedBox(
+                width: MediaQuery.of(context).size.width,
+                child: coverPicture ?? const Placeholder()
+              ),
             )
           ),
 
@@ -376,8 +379,8 @@ class _PlayerTabState extends State<PlayerTab> {
                 ),
                 IconButton(
                   onPressed: _togglePlayPause,
-                  icon: _paused ? const Icon(Icons.play_arrow) : const Icon(Icons.pause),
-                  iconSize: 50,
+                  icon: _paused ? const Icon(Icons.play_circle_fill) : const Icon(Icons.pause_circle_filled),
+                  iconSize: 70,
                 ),
                 IconButton(
                   onPressed: () async {
