@@ -77,12 +77,14 @@ class _ArtistPageState extends State<ArtistPage> {
                       _containerButton(183, 50, Provider.of<ThemeProvider>(context, listen: true).currentTheme == ThemeMode.dark ? 
                               const Color.fromRGBO(245, 245, 245, 1) : const Color.fromRGBO(20, 20, 20, 1), 0.2, const Icon(Icons.play_arrow, size: 40), 
                       () {
-
+                          Provider.of<AudioServiceProvider>(context, listen: false).getAudioPlayer().setShuffleModeEnabled(false);
+                          Provider.of<AudioServiceProvider>(context, listen: false).playSongs(_artistTracks, 0);
                       }),
                       _containerButton(183, 50, Provider.of<ThemeProvider>(context, listen: true).currentTheme == ThemeMode.dark ? 
                               const Color.fromRGBO(245, 245, 245, 1) : const Color.fromRGBO(20, 20, 20, 1), 0.2, const Icon(Icons.shuffle, size: 35), 
                       () {
-                        
+                        Provider.of<AudioServiceProvider>(context, listen: false).getAudioPlayer().setShuffleModeEnabled(true);
+                        Provider.of<AudioServiceProvider>(context, listen: false).playSongs(_artistTracks, 0);
                       })
                     ],
                   ),

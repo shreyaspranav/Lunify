@@ -125,11 +125,20 @@ class _AlbumPageState extends State<AlbumPage> {
                     children: [
                       _containerButton(177, 50, _albumCoverPrimaryColor, 0.4, const Icon(Icons.play_arrow, size: 40), 
                       () {
-
+                        Provider.of<AudioServiceProvider>(context, listen: false).getAudioPlayer().setShuffleModeEnabled(false);
+                        Provider.of<AudioServiceProvider>(context, listen: false).playSongs(widget.album.tracks, 0);
+                        setState(() {
+                          _playingSong = widget.album.tracks[0];
+                        });
                       }),
                       _containerButton(177, 50, _albumCoverPrimaryColor, 0.4, const Icon(Icons.shuffle, size: 35), 
                       () {
-                        
+                        Provider.of<AudioServiceProvider>(context, listen: false).getAudioPlayer().setShuffleModeEnabled(true);
+                        Provider.of<AudioServiceProvider>(context, listen: false).playSongs(widget.album.tracks, 0);
+
+                        setState(() {
+                          _playingSong = widget.album.tracks[0];
+                        });
                       })
                     ],
                   ),

@@ -90,6 +90,7 @@ class AudioServiceProvider extends ChangeNotifier {
       _audioLibraryUrls.add(url);
     }
 
+    
     _currentPlaylistAudioSource = ConcatenatingAudioSource(children: []);
     _audioPlayer.setAudioSource(_currentPlaylistAudioSource, initialIndex: 0, initialPosition: Duration.zero);
   }

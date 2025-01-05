@@ -98,12 +98,18 @@ class _PlaylistPageState extends State<PlaylistPage> {
                       _containerButton(177, 50, 
                         colorPalette[Provider.of<ThemeProvider>(context, listen: false).currentTheme == ThemeMode.light ? 2 : 3], 0.4, const Icon(Icons.play_arrow, size: 40), 
                       () {
-
+                        setState(() {
+                          Provider.of<AudioServiceProvider>(context, listen: false).getAudioPlayer().setShuffleModeEnabled(false);
+                          Provider.of<AudioServiceProvider>(context, listen: false).playSongs(widget.playlist.songs, 0);
+                        });
                       }),
                       _containerButton(177, 50, 
                         colorPalette[Provider.of<ThemeProvider>(context, listen: false).currentTheme == ThemeMode.light ? 2 : 3], 0.4, const Icon(Icons.shuffle, size: 35), 
                       () {
-                        
+                        setState(() {
+                          Provider.of<AudioServiceProvider>(context, listen: false).getAudioPlayer().setShuffleModeEnabled(true);
+                          Provider.of<AudioServiceProvider>(context, listen: false).playSongs(widget.playlist.songs, 0);
+                        });
                       })
                     ],
                   ),

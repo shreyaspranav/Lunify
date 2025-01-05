@@ -78,6 +78,7 @@ class _PlayerTabState extends State<PlayerTab> {
   void _toggleShuffle() {
     setState(() {
       _isShuffleOn = !_isShuffleOn;
+      Provider.of<AudioServiceProvider>(context, listen: false).getAudioPlayer().setShuffleModeEnabled(_isShuffleOn);
     });
   }
 
@@ -86,12 +87,15 @@ class _PlayerTabState extends State<PlayerTab> {
       // Toggling between RepeatState.off -> RepeatState.playlist -> RepeatState.current 
       if(_repeatState == RepeatState.off) {
         _repeatState = RepeatState.playlist;
+        Provider.of<AudioServiceProvider>(context, listen: false).getAudioPlayer().setLoopMode(LoopMode.all);
       }
       else if(_repeatState == RepeatState.playlist) {
         _repeatState = RepeatState.current;
+        Provider.of<AudioServiceProvider>(context, listen: false).getAudioPlayer().setLoopMode(LoopMode.one);
       }
       else if(_repeatState == RepeatState.current) {
         _repeatState = RepeatState.off;
+        Provider.of<AudioServiceProvider>(context, listen: false).getAudioPlayer().setLoopMode(LoopMode.off);
       }
     });
   }
@@ -106,6 +110,8 @@ class _PlayerTabState extends State<PlayerTab> {
     _paused = !Provider.of<AudioServiceProvider>(context, listen: false).getAudioPlayer().playerState.playing;
 
     _playbackSpeed = Provider.of<AudioServiceProvider>(context, listen: false).getAudioPlayer().speed;
+
+    _isShuffleOn = Provider.of<AudioServiceProvider>(context, listen: false).getAudioPlayer().shuffleModeEnabled;
     
     // For now, let playback speed and pitch be the same(this offers best audio quality)
     // There is only one slider thats sets both the speed and pitch 
