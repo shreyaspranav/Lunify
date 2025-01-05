@@ -172,7 +172,7 @@ class _AlbumPageState extends State<AlbumPage> {
                   subtitle: Text(track.songArtist),
                   onTap: () {
                     // Handle track click (e.g., play song)
-                    Provider.of<AudioServiceProvider>(context, listen: false).songClickedCallbackOnAlbum(widget.album, index);
+                    Provider.of<AudioServiceProvider>(context, listen: false).playSongs(widget.album.tracks, index);
                     setState(() {
                       _playingSong = widget.album.tracks[index];
                     });

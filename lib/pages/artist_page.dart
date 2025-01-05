@@ -257,42 +257,15 @@ class _ArtistPageState extends State<ArtistPage> {
               ),
             ),
           ),
-          SliverList.builder(
-            itemCount: _artistTracks.length,
-            itemBuilder: (context, index) {
-              return ListTile(
-                minVerticalPadding: 0,
-                title: Text(
-                  _artistTracks[index].songName,
-                  style: TextStyle(
-                    fontWeight: _highlightedSong == _artistTracks[index] ?
-                      FontWeight.bold : FontWeight.normal, 
-                    color: _highlightedSong == _artistTracks[index] ? const Color(0xFF7E60BF) : 
-                      Provider.of<ThemeProvider>(context, listen: false).currentTheme == ThemeMode.light ? Colors.black : Colors.white
-                  ), 
-                ),
-                subtitle: Text(_artistTracks[index].songArtist),
-                leading:  Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const SizedBox(width: 5),
-                    _artistTracks[index].coverPicture ?? 
-                      const Icon(
-                        Icons.music_note_outlined,
-                        size: 55,
-                      ),
-                  ],
-                ),
-                onTap: () {
-                  Provider.of<AudioServiceProvider>(context, listen: false).songClickedCallback(_artistTracks[index]);
-
-                  setState(() {
-                    _highlightedSong = _artistTracks[index];
-                  });
-                },
-              );
-            }
-          )
+          SliverToBoxAdapter(
+            child: SongListView(
+              songsToDisplay: _artistTracks, 
+              loading: false, 
+              displayContext: DisplayContext.artistsContext,
+              displayIndex: false,
+              scrollable: false,
+            ),
+          ),
         ]
       ),
     );

@@ -130,7 +130,8 @@ class _PlaylistPageState extends State<PlaylistPage> {
               songsToDisplay: widget.playlist.songs, 
               loading: false,
               displayIndex: false,
-              optionButtonTapFunction: OptionButtonTapFunction.OptionsInPlaylistContext
+              scrollable: false,
+              displayContext: DisplayContext.playlistContext,
             ),
           )
         ],

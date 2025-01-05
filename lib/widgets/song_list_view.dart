@@ -6,8 +6,8 @@ import 'package:lunify/models/song_model.dart';
 import 'package:lunify/theme_provider.dart';
 import 'package:provider/provider.dart';
 
-enum OptionButtonTapFunction {
-  OptionsInSongsContext, OptionsInPlaylistContext
+enum DisplayContext {
+  songsContext, playlistContext, currentPlayingQueueContext, artistsContext
 }
 
 class SongListView extends StatefulWidget {
@@ -16,10 +16,10 @@ class SongListView extends StatefulWidget {
   bool loading;
   bool displayIndex;
   bool scrollable;
-  OptionButtonTapFunction optionButtonTapFunction;
+  DisplayContext displayContext;
 
 
-  SongListView({super.key, required this.songsToDisplay, required this.loading, required this.optionButtonTapFunction, this.displayIndex = true, this.scrollable = true});
+  SongListView({super.key, required this.songsToDisplay, required this.loading, required this.displayContext, this.displayIndex = true, this.scrollable = true});
 
   @override
   State<SongListView> createState() => _SongListViewState();
@@ -41,7 +41,7 @@ class _SongListViewState extends State<SongListView> with TickerProviderStateMix
   Widget build(BuildContext context) {
     return ListView.builder(
       physics: widget.scrollable ? null : const NeverScrollableScrollPhysics(),
-      shrinkWrap: widget.scrollable,
+      shrinkWrap: !widget.scrollable,
       itemCount: widget.songsToDisplay.length,
       itemBuilder: (context, index) {
         if(index == widget.songsToDisplay.length - 1 && widget.loading) {
@@ -63,18 +63,18 @@ class _SongListViewState extends State<SongListView> with TickerProviderStateMix
             ), 
           ),
           contentPadding: const EdgeInsets.only(
-            top: 1.5,
-            bottom: 1.5,
+            top: 0,
+            bottom: 0,
             left: 10,
             right: 6
           ),
           trailing: IconButton(
             icon: const Icon(Icons.more_vert), 
             onPressed: () {
-              switch (widget.optionButtonTapFunction) {
-                case OptionButtonTapFunction.OptionsInPlaylistContext:
+              switch (widget.displayContext) {
+                case DisplayContext.playlistContext:
                   break;
-                case OptionButtonTapFunction.OptionsInSongsContext:
+                case DisplayContext.songsContext:
                   _showOptionsInSongsContext(context, widget.songsToDisplay[index]);
                   break;
                 
@@ -107,16 +107,17 @@ class _SongListViewState extends State<SongListView> with TickerProviderStateMix
             ],
           ),
           onTap: () {
-            switch (widget.optionButtonTapFunction) {
-              case OptionButtonTapFunction.OptionsInPlaylistContext:
-                AudioPlaylist p = AudioPlaylist(playlistName: "");
-                p.songs = widget.songsToDisplay;
-                Provider.of<AudioServiceProvider>(context, listen: false).songClickedCallbackOnPlaylist(p, index);
+            switch (widget.displayContext) {
+              case DisplayContext.currentPlayingQueueContext:
+                Provider.of<AudioServiceProvider>(context, listen: false).playSongWithinQueue(index);
                 break;
-              case OptionButtonTapFunction.OptionsInSongsContext:
-                Provider.of<AudioServiceProvider>(context, listen: false).songClickedCallback(widget.songsToDisplay[index]);
+              case DisplayContext.playlistContext:
+              case DisplayContext.artistsContext:
+                Provider.of<AudioServiceProvider>(context, listen: false).playSongs(widget.songsToDisplay, index);
                 break;
-              
+              case DisplayContext.songsContext:
+                Provider.of<AudioServiceProvider>(context, listen: false).appendSongInQueueAndPlay(widget.songsToDisplay[index]);
+                break;
               default:
             }
 

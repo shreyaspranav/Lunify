@@ -28,7 +28,7 @@ class _MusicTabState extends State<MusicTab> {
         songsToDisplay: _audioServiceProvider.getAudioLibrary().songs, 
         loading: widget.isLoading(), 
         displayIndex: false,
-        optionButtonTapFunction: OptionButtonTapFunction.OptionsInSongsContext
+        displayContext: DisplayContext.songsContext
       ),
     );
   }
