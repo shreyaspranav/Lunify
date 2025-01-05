@@ -141,7 +141,9 @@ class _PlayerTabState extends State<PlayerTab> {
         if (mounted) {
           setState(() {
             final _audioPlayer = Provider.of<AudioServiceProvider>(context, listen: false);
-            _audioPlayer.setCurrentSongPlaying(_audioPlayer.getCurrentPlaylist().songs[sequenceState.currentIndex]);
+            if(!_audioPlayer.getCurrentPlaylist().songs.isEmpty) {
+              _audioPlayer.setCurrentSongPlaying(_audioPlayer.getCurrentPlaylist().songs[sequenceState.currentIndex]);
+            }
             initCurrentSong();
           });
         }
