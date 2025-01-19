@@ -50,6 +50,7 @@ dev_dependencies:
   path_provider: ^2.1.5
   audio_metadata_extractor: ^0.0.4
   just_audio: ^0.9.42
+  just_audio_background: ^0.0.1-beta.14
   provider: ^6.1.2
   image: ^4.3.0
   filesystem_picker: ^4.1.0

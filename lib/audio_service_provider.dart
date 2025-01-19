@@ -12,6 +12,8 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:messagepack/messagepack.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:just_audio_background/just_audio_background.dart';
+
 import 'package:path/path.dart' as p;
 
 class AudioPlaylist {
@@ -620,8 +622,19 @@ class AudioServiceProvider extends ChangeNotifier {
   // or clicked the play button. Clicking on the play button will play the first song.
   void playSongs(List<SongModel> songs, int playIndex, {bool append = false}) async {
     List<AudioSource> sources = [];
+    int id = 0;
+
     for(SongModel track in songs) {
-      sources.add(AudioSource.file(track.songUrl));
+      sources.add(
+        AudioSource.file(
+          track.songUrl,
+          tag: MediaItem(
+            id: id.toString(),
+            title: track.songName,
+            album: track.songAlbum,
+            artist: track.songArtist,
+          )
+        ));
     }
 
     // There are two ways to handle this.
@@ -665,7 +678,15 @@ class AudioServiceProvider extends ChangeNotifier {
   void appendSongInQueueAndPlay(SongModel model, {bool play = true}) {
     int idx = 0;
     if(!_currentPlaylist.songs.contains(model)) {
-      AudioSource source = AudioSource.file(model.songUrl);
+      AudioSource source = AudioSource.file(
+        model.songUrl,
+        tag: MediaItem(
+          id: _currentPlaylist.songs.length.toString(),
+          title: model.songName,
+          album: model.songAlbum,
+          artist: model.songArtist,
+        )
+      );
       _currentPlaylistAudioSource.add(source);
       _currentPlaylist.songs.add(model);
 
