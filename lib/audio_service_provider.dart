@@ -634,27 +634,25 @@ class AudioServiceProvider extends ChangeNotifier {
             album: track.songAlbum,
             artist: track.songArtist,
           )
-        ));
+        )
+      );
+      id++;
     }
-
-    // There are two ways to handle this.
-    //  One being when a user clicks on a song on an album, the songs in the current playlist gets destroyed and only the album songs will be included in the current playlist.
-    //  Another being appending the album songs.
-    // For the sake of simplicity, I am going on the first approach.
 
     int prevCount = _currentPlaylist.songs.length;
-
-    if(!append){
-      prevCount = 0;
-      _currentPlaylistAudioSource.clear();
-    }
-    await _currentPlaylistAudioSource.addAll(sources);
     
     if(!append) {
       _currentPlaylist.songs.clear();
     }
 
     _currentPlaylist.songs.addAll(songs);
+
+    if(!append){
+      prevCount = 0;
+      await _currentPlaylistAudioSource.clear();
+    }
+
+    await _currentPlaylistAudioSource.addAll(sources);
 
     if(_audioPlayer.playing) {
       _audioPlayer.stop();
