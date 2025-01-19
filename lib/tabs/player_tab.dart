@@ -32,6 +32,8 @@ class _PlayerTabState extends State<PlayerTab> {
   bool _isShuffleOn = false;
   RepeatState _repeatState = RepeatState.off;
 
+  late AudioPlaylist _likedSongs;
+
   // TEMP: Song seconds calculation:
   late SongModel _currentSongPlaying;
   late Duration _songDuration;
@@ -118,6 +120,13 @@ class _PlayerTabState extends State<PlayerTab> {
     _playbackPitch = _playbackSpeed;
 
     initCurrentSong();
+
+    _likedSongs = Provider.of<AudioServiceProvider>(context, listen: false).getLikedSongs();
+    if(_likedSongs.songs.contains(_currentSongPlaying)) {
+      setState(() {
+        _favorite = true;
+      });
+    }
     
     Provider.of<AudioServiceProvider>(context, listen: false).getAudioPlayer().positionStream.listen((position) {
       if(mounted) {
@@ -282,6 +291,15 @@ class _PlayerTabState extends State<PlayerTab> {
                   onPressed: () {
                     setState(() {
                       _favorite = !_favorite;
+                      if(_favorite) {
+                        // _likedSongs.songs.add(_currentSongPlaying);
+                        Provider.of<AudioServiceProvider>(context, listen: false).addLikedSong(_currentSongPlaying);
+                      }
+                      else {
+                        // _likedSongs.songs.remove(_currentSongPlaying);
+                        Provider.of<AudioServiceProvider>(context, listen: false).deleteLikedSong(_currentSongPlaying);
+                      }
+                      Provider.of<AudioServiceProvider>(context, listen: false).serializePlaylists();
                     });
                   }, 
                   icon: Icon(_favorite ? Icons.favorite : Icons.favorite_border)

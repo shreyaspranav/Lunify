@@ -46,8 +46,11 @@ class AudioServiceProvider extends ChangeNotifier {
   List<AudioPlaylist> _playlists = [];
 
   AudioPlaylist _currentPlaylist = AudioPlaylist(playlistName: "Current Playlist");
-  AudioPlaylist _library = AudioPlaylist(playlistName: "Library");  // Contains all the audio files that the device has to offer.
   late ConcatenatingAudioSource _currentPlaylistAudioSource;
+
+  AudioPlaylist _library = AudioPlaylist(playlistName: "Library");  // Contains all the audio files that the device has to offer.
+  AudioPlaylist _liked = AudioPlaylist(playlistName: "Liked");
+  AudioPlaylist _recentlyPlayed = AudioPlaylist(playlistName: "Recently Played");
 
   // Convinient list of albums. This will be filled when deserializing from cache or loading from disk.
   List<AlbumModel> _albums = [];
@@ -502,8 +505,11 @@ class AudioServiceProvider extends ChangeNotifier {
     File serializedFile = File(await getCacheEntryPath(_audioPlaylistDataFileName));
     Packer packer = Packer();
 
-    packer.packInt(_playlists.length);
-    for(AudioPlaylist playlist in _playlists) {
+    packer.packInt(_playlists.length + 2); // 2 extra playlists: Liked songs and Recently Played
+
+    List<AudioPlaylist> playlistsToSerialize = [_liked, _recentlyPlayed, ..._playlists];
+
+    for(AudioPlaylist playlist in playlistsToSerialize) {
       packer.packString(playlist.playlistName);
       packer.packInt(playlist.songs.length);
 
@@ -520,6 +526,7 @@ class AudioServiceProvider extends ChangeNotifier {
     if(!deserializedFile.existsSync()) return;
 
     _playlists.clear();
+    List<AudioPlaylist> deserializedPlaylists = [];
 
     Uint8List cacheBytes = await deserializedFile.readAsBytes();
 
@@ -529,19 +536,22 @@ class AudioServiceProvider extends ChangeNotifier {
     for(int i = 0; i < playlistCount; i++) {
       
       String name = unpacker.unpackString()!;
-      _playlists.add(AudioPlaylist(playlistName: name));
+      deserializedPlaylists.add(AudioPlaylist(playlistName: name));
 
       int trackCount = unpacker.unpackInt()!;
 
       for(int i = 0; i < trackCount; i++) {
         String songUrl = unpacker.unpackString()!;
-
-
-
         SongModel song = _library.songs.lastWhere((songModel) => songModel.songUrl == songUrl, orElse: () => _nullSong);
-        if(song != _nullSong) _playlists.last.songs.add(song);
+        if(song != _nullSong) deserializedPlaylists.last.songs.add(song);
       }
     }
+
+    _liked = deserializedPlaylists[0];
+    _recentlyPlayed = deserializedPlaylists[1];
+
+    // The remaining playlists
+    _playlists = deserializedPlaylists.sublist(2);
   }
 
   double getAudioMetadataLoadingProgress()   { return _audioMetadataLoadingProgress; }
@@ -549,6 +559,8 @@ class AudioServiceProvider extends ChangeNotifier {
   List<AlbumModel> getAlbums()               { return _albums; }
   List<ArtistModel> getArtists()             { return _artists; }
   List<AudioPlaylist> getPlaylists()         { return _playlists; }
+  AudioPlaylist getLikedSongs()              { return _liked; }
+  AudioPlaylist getRecentlyPlayedSongs()     { return _recentlyPlayed; }
 
   void addSongToPlaylist(AudioPlaylist playlist, SongModel song) {
     if(_playlists.contains(playlist) && !playlist.songs.contains(song)) {
@@ -584,6 +596,14 @@ class AudioServiceProvider extends ChangeNotifier {
     else {
       return _playlists.lastWhere((playlist) => playlist.playlistName == name);
     }
+  }
+
+  void addLikedSong(SongModel song) {
+    _liked.songs.add(song);
+  }
+
+  void deleteLikedSong(SongModel song) {
+    _liked.songs.remove(song);
   }
 
   void addAudioLibraryUrl(String url) {
@@ -669,6 +689,8 @@ class AudioServiceProvider extends ChangeNotifier {
     _audioPlayer.seek(Duration.zero, index: index);
     _currentSongPlaying = _currentPlaylist.songs[index];
     _audioPlayer.play();
+
+    addToRecentlyPlayed(_currentSongPlaying);
   }
 
   // A single song is clicked. add this to the current playlist play the song.
@@ -706,17 +728,25 @@ class AudioServiceProvider extends ChangeNotifier {
       _currentSongPlaying = model;
       _audioPlayer.play();
     }
+
+    addToRecentlyPlayed(_currentSongPlaying);
   }
 
+  void addToRecentlyPlayed(SongModel song) {
+    if(_recentlyPlayed.songs.contains(song)) {
+      _recentlyPlayed.songs.remove(song);
+    }
 
-  // void songClickedCallbackInPlaylist(int indexInCurrentPlaylist) {
-  //   _currentSongPlayingIndexInCurrentPlaylist = indexInCurrentPlaylist;
-  //   print("Song: $_currentSongPlayingIndexInCurrentPlaylist");
-  //   _currentTabs.animateTo(_playerTabIndex);
-  //   _currentSongPlaying = _currentPlaylist.songs[indexInCurrentPlaylist];
-  //   _audioPlayer.seek(Duration.zero, index: _currentSongPlayingIndexInCurrentPlaylist);
-  //   _audioPlayer.play();
-  // }
+    // Add at the beginning:
+    _recentlyPlayed.songs.insert(0, song);
+
+    // Limit the Recently Played songs to 20:
+    if(_recentlyPlayed.songs.length > 20) {
+      _recentlyPlayed.songs = _recentlyPlayed.songs.sublist(0, 20);
+    }
+
+    serializePlaylists();
+  }
 
   Future<void> previousSong() async {
     await _audioPlayer.seekToPrevious();

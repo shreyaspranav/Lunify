@@ -164,7 +164,7 @@ class _HomeTabState extends State<HomeTab> with TickerProviderStateMixin {
                   customContainer(
                     width: 175,
                     height: 160,
-                    displayText: "Most Played",
+                    displayText: "Liked Songs",
                     showOptionsButton: false,
                     gradient: LinearGradient(
                       colors: [
@@ -177,7 +177,13 @@ class _HomeTabState extends State<HomeTab> with TickerProviderStateMixin {
                     ),
                     image: Image.asset("assets/covers/4.jpg", fit: BoxFit.cover),
                     fontSize: 18.0,
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => PlaylistPage(
+                          cover: Image.asset("assets/covers/${_coverIndices[7]}.jpg", 
+                          fit: BoxFit.cover
+                        ), 
+                        playlist: Provider.of<AudioServiceProvider>(context, listen: false).getLikedSongs())));
+                    },
                   ),
                   customContainer(
                     width: 175,
@@ -195,7 +201,13 @@ class _HomeTabState extends State<HomeTab> with TickerProviderStateMixin {
                     ),
                     image: Image.asset("assets/covers/3.jpg", fit: BoxFit.cover),
                     fontSize: 18.0,
-                    onTap: () {},
+                    onTap: () {
+                       Navigator.push(context, MaterialPageRoute(builder: (context) => PlaylistPage(
+                          cover: Image.asset("assets/covers/${_coverIndices[7]}.jpg", 
+                          fit: BoxFit.cover
+                        ), 
+                        playlist: Provider.of<AudioServiceProvider>(context, listen: false).getRecentlyPlayedSongs())));
+                    },
                   ),
                 ],
               ),
