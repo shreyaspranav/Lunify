@@ -271,8 +271,8 @@ class _PlayerTabState extends State<PlayerTab> {
                                         setState(() {});
                                       });
                                     },
-                                    thumbColor: _songCoverTintPalette[0],
-                                    activeColor: _songCoverTintPalette[1],
+                                    thumbColor: _songCoverTintPalette[0] == _transparentColor ? null : _songCoverTintPalette[0],
+                                    activeColor: _songCoverTintPalette[1] == _transparentColor ? null : _songCoverTintPalette[1],
                                   )
                                 ],
                               )

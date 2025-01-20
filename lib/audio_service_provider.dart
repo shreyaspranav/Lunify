@@ -554,13 +554,15 @@ class AudioServiceProvider extends ChangeNotifier {
     _playlists = deserializedPlaylists.sublist(2);
   }
 
-  double getAudioMetadataLoadingProgress()   { return _audioMetadataLoadingProgress; }
-  AudioPlaylist getAudioLibrary()            { return _library; }
-  List<AlbumModel> getAlbums()               { return _albums; }
-  List<ArtistModel> getArtists()             { return _artists; }
-  List<AudioPlaylist> getPlaylists()         { return _playlists; }
-  AudioPlaylist getLikedSongs()              { return _liked; }
-  AudioPlaylist getRecentlyPlayedSongs()     { return _recentlyPlayed; }
+  double getAudioMetadataLoadingProgress()       { return _audioMetadataLoadingProgress; }
+  AudioPlaylist getAudioLibrary()                { return _library; }
+  List<AlbumModel> getAlbums()                   { return _albums; }
+  List<ArtistModel> getArtists()                 { return _artists; }
+  List<AudioPlaylist> getPlaylists()             { return _playlists; }
+  AudioPlaylist getLikedSongs()                  { return _liked; }
+  AudioPlaylist getRecentlyPlayedSongs()         { return _recentlyPlayed; }
+  AudioPlaylist getPlaylistAtIndex(int index)    { return _playlists[index]; }
+  int getPlaylistCount()                         { return _playlists.length; }
 
   void addSongToPlaylist(AudioPlaylist playlist, SongModel song) {
     if(_playlists.contains(playlist) && !playlist.songs.contains(song)) {

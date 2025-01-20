@@ -6,6 +6,7 @@ import 'package:lunify/pages/library_page.dart';
 import 'package:lunify/pages/playlist_page.dart';
 import 'package:lunify/theme_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -260,7 +261,7 @@ class _HomeTabState extends State<HomeTab> with TickerProviderStateMixin {
                   left: 5,
                   right: 5,
                 ),
-                itemCount: _playlists.length,
+                itemCount: Provider.of<AudioServiceProvider>(context, listen: false).getPlaylistCount(),
                 itemBuilder: (context, index) {
                   return Padding(
                     padding: const EdgeInsets.only(
@@ -272,7 +273,7 @@ class _HomeTabState extends State<HomeTab> with TickerProviderStateMixin {
                     child: customContainer(
                       width: MediaQuery.sizeOf(context).width,
                       height: 100,
-                      displayText: _playlists[index].playlistName,
+                      displayText: Provider.of<AudioServiceProvider>(context, listen: false).getPlaylistAtIndex(index).playlistName,
                       showOptionsButton: true,
                       fontSize: 20,
                       gradient: LinearGradient(
@@ -291,15 +292,23 @@ class _HomeTabState extends State<HomeTab> with TickerProviderStateMixin {
                         color: colorPalette[Provider.of<ThemeProvider>(context, listen: false).currentTheme == ThemeMode.light ? 2 : 1],
                       ),
                       onTap: () {
+                        _playlists = Provider.of<AudioServiceProvider>(context, listen: false).getPlaylists();
                         // When the user taps the card
                         Navigator.push(context, MaterialPageRoute(builder: (context) => PlaylistPage(
                           cover: Image.asset("assets/covers/${_coverIndices[index % _coverIndices.length]}.jpg", 
                           fit: BoxFit.cover
                         ), 
-                        playlist: _playlists[index])));
+                        playlist: Provider.of<AudioServiceProvider>(context, listen: false).getPlaylistAtIndex(index))));
                       },
                       onBottomIconTap: () {
-                        Provider.of<AudioServiceProvider>(context, listen: false).playSongs(_playlists[index].songs, 0);
+                        if(Provider.of<AudioServiceProvider>(context, listen: false).getPlaylistAtIndex(index).songs.isNotEmpty) {
+                          Provider.of<AudioServiceProvider>(context, listen: false).playSongs(Provider.of<AudioServiceProvider>(context, listen: false).getPlaylistAtIndex(index).songs, 0);
+                        }
+                        else {
+                          Fluttertoast.showToast(
+                            msg: "The Playlist is empty. Add songs to play"
+                          );
+                        }
                       },
                       onOptionsTap: () {
                         // When the user taps the options button
@@ -327,7 +336,7 @@ class _HomeTabState extends State<HomeTab> with TickerProviderStateMixin {
                                             left: 15
                                           ),
                                           child: Text(
-                                            "${_playlists[index].playlistName}",
+                                            "${Provider.of<AudioServiceProvider>(context, listen: false).getPlaylistAtIndex(index).playlistName}",
                                             style: TextStyle(
                                               fontSize: 20
                                             ),
@@ -340,7 +349,7 @@ class _HomeTabState extends State<HomeTab> with TickerProviderStateMixin {
                                           ),
                                           onPressed: () {
                                             setState(() {
-                                              Provider.of<AudioServiceProvider>(context, listen: false).deletePlaylist(_playlists[index]);
+                                              Provider.of<AudioServiceProvider>(context, listen: false).deletePlaylist(Provider.of<AudioServiceProvider>(context, listen: false).getPlaylistAtIndex(index));
                                             });
                                             Provider.of<AudioServiceProvider>(context, listen: false).serializePlaylists();
                                             // Close the sheet
@@ -365,7 +374,7 @@ class _HomeTabState extends State<HomeTab> with TickerProviderStateMixin {
                                           ),
                                           title: const Text("Play"),
                                           onTap: () {
-                                            Provider.of<AudioServiceProvider>(context, listen: false).playSongs(_playlists[index].songs, 0);
+                                            Provider.of<AudioServiceProvider>(context, listen: false).playSongs(Provider.of<AudioServiceProvider>(context, listen: false).getPlaylistAtIndex(index).songs, 0);
                                             Navigator.pop(context);
                                           },
                                         ),
@@ -380,7 +389,7 @@ class _HomeTabState extends State<HomeTab> with TickerProviderStateMixin {
                                           ),
                                           title: const Text("Add to the Playing Queue"),
                                           onTap: () {
-                                            for(SongModel song in _playlists[index].songs) {
+                                            for(SongModel song in Provider.of<AudioServiceProvider>(context, listen: false).getPlaylistAtIndex(index).songs) {
                                               Provider.of<AudioServiceProvider>(context, listen: false).appendSongInQueueAndPlay(song, play: false);
                                             }
                                             Navigator.pop(context);
